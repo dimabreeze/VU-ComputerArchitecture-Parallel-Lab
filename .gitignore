@@ -1,0 +1,6 @@
+build/
+.cache/
+.venv/
+compile_commands.json
+.DS_Store
+__pycache__/

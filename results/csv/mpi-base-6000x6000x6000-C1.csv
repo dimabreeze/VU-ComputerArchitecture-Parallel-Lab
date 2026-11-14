@@ -1,0 +1,2 @@
+tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat
+mpi,base,6000,6000,6000,1,0.048673,0.119094,584.141109,584.308876,1

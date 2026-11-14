@@ -1,0 +1,2 @@
+tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat
+opencl,coalesced,16000,16000,16000,19,0.499533,0.975696,35.419934,36.895163,1

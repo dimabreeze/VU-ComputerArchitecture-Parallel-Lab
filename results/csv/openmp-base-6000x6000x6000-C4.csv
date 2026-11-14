@@ -1,0 +1,2 @@
+tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat
+openmp,base,6000,6000,6000,4,0.012862,0.119561,151.675963,151.808386,1

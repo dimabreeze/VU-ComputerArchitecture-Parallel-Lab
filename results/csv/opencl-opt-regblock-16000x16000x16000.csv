@@ -1,0 +1,2 @@
+tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat
+opencl,regblock,16000,16000,16000,19,0.275557,0.859745,9.924581,11.059883,1

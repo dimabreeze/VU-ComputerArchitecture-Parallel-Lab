@@ -1,0 +1,2 @@
+tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat
+opencl,naive,6000,6000,6000,19,0.066238,0.125277,13.081610,13.273125,1

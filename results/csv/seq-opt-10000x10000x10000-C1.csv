@@ -1,0 +1,2 @@
+tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat
+seq,opt,10000,10000,10000,1,0.112012,0.326902,25.863145,26.302059,1

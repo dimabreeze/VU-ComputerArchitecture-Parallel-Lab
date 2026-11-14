@@ -1,0 +1,2 @@
+tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat
+mpi,opt,16000,16000,16000,1,0.289587,0.901663,105.098942,106.290192,1
