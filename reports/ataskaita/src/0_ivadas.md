@@ -30,6 +30,7 @@ Ataskaita sudaryta iš savarankiškų dalių. Ši bendroji dalis aprašo visoms 
 | **2 dalis. MPI** | procesai su atskira atmintimi: `mpi-base` → `mpi-opt`, procesų skaičius, dydis, atminties stygius |
 | **3 dalis. OpenCL** | skaičiavimai vaizdo plokštėje: `naive` → `coalesced` → `tiled` → `regblock`, dydis, GPU apkrova |
 | **Bendros išvados** | visų technologijų palyginimas ir apibendrinimas |
+| **Interaktyvi versija** ([dimabreeze.github.io/VU-ComputerArchitecture-Parallel-Lab](https://dimabreeze.github.io/VU-ComputerArchitecture-Parallel-Lab/)) | lenktynės, branduolių apkrovos grotuvas, visi matavimai, Amdalo dėsnis ir TLB riba – su tais pačiais duomenimis |
 
 Visas kodas, matavimų duomenys ir šios ataskaitos šaltiniai – saugykloje (nuoroda titulinio puslapio apačioje). Kiekvieną grafiką ir lentelę galima atkurti viena komanda (`make bench`, `make reports`, `make memory`, `make monitor`, `make report`).
 

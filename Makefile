@@ -139,7 +139,7 @@ clean:
 
 # ---- plots (matplotlib in a local virtualenv) ----
 .venv:
-	python3 -m venv .venv && .venv/bin/pip install -q matplotlib
+	python3 -m venv .venv && .venv/bin/pip install -q matplotlib markdown segno
 
 # make plot                              results/csv/*.csv -> results/plots/
 # make plot IN=<dir> OUT=<report-dir>    all *.csv in <dir> -> <report-dir>/plots/

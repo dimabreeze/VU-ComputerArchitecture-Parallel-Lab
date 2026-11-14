@@ -27,6 +27,7 @@ import tempfile
 from pathlib import Path
 
 import markdown
+import segno
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "reports/ataskaita/src"
@@ -36,7 +37,9 @@ AUTHOR = "Dmitrij Kosmakov"
 COURSE = "Kompiuterių architektūra · 4 laboratorinis darbas · Vilniaus universitetas"
 DATE = "2026 m. lapkritis"
 REPO = "https://github.com/dimabreeze/VU-ComputerArchitecture-Parallel-Lab"
-QR = ROOT / "docs/img/qr-github.png"  # QR code of REPO (title pages)
+PAGES = "https://dimabreeze.github.io/VU-ComputerArchitecture-Parallel-Lab/"  # interactive version
+# title pages show two QR codes, generated from these URLs at build time (segno)
+QR_CODES = (("Kodas ir duomenys", REPO), ("Interaktyvi versija", PAGES))
 
 CSS = r"""
 @page { size: A4; margin: 20mm 18mm 20mm 18mm;
@@ -81,7 +84,10 @@ figcaption b { color: var(--ink); }
 .titlepage .bar { width: 40mm; height: 3px; background: var(--accent); margin-bottom: 8mm; }
 .titlepage .metarow { display: flex; align-items: flex-end; justify-content: space-between; gap: 10mm; }
 .titlepage .meta a { color: var(--accent); text-decoration: none; }
-.titlepage .qr { width: 34mm; height: auto; flex: none; }
+.titlepage .qrs { display: flex; gap: 6mm; flex: none; }
+.titlepage figure.qr { margin: 0; text-align: center; break-inside: avoid; }
+.titlepage figure.qr img { width: 30mm; height: 30mm; max-height: none; display: block; }
+.titlepage figure.qr figcaption { font-size: 8pt; margin-top: 1.5mm; color: var(--muted); }
 .titlepage + h1, .titlepage + section > h1 { break-before: avoid; }
 .toc { font-family: "Avenir Next", sans-serif; font-size: 10pt; }
 """
@@ -114,14 +120,24 @@ def figures(body, counter):
                   lambda m: "".join(one(a) for a in re.findall(r"<img ([^>]*?)/?>", m.group(1))), body)
 
 
+def qr_block():
+    """two labelled QR codes as inline SVG data URIs (black on white, quiet zone included)"""
+    items = []
+    for label, url in QR_CODES:
+        uri = segno.make(url, error="m").svg_data_uri(scale=4, border=2)
+        items.append(f'<figure class="qr"><img src="{uri}" alt="QR: {html.escape(url)}">'
+                     f'<figcaption>{html.escape(label)}</figcaption></figure>')
+    return f'<div class="qrs">{"".join(items)}</div>'
+
+
 def titlepage(meta):
     sub = f'<div class="subtitle">{html.escape(meta.get("subtitle", ""))}</div>' if meta.get("subtitle") else ""
     return (f'<section class="titlepage"><div class="part">{html.escape(meta.get("part", ""))}</div>'
             f'<div class="title">{html.escape(meta.get("title", ""))}</div>{sub}<div class="bar"></div>'
             f'<div class="metarow"><div class="meta">{html.escape(AUTHOR)}<br>{html.escape(COURSE)}<br>{html.escape(DATE)}<br>'
-            f'Kodas ir duomenys: <a href="{REPO}">{html.escape(REPO)}</a></div>'
-            + (f'<img class="qr" src="{QR.as_uri()}" alt="QR: {html.escape(REPO)}">' if QR.exists() else "")
-            + '</div></section>')
+            f'Kodas ir duomenys: <a href="{REPO}">{html.escape(REPO)}</a><br>'
+            f'Interaktyvi versija: <a href="{PAGES}">{html.escape(PAGES)}</a></div>'
+            + qr_block() + '</div></section>')
 
 
 def page(sections, footer):
