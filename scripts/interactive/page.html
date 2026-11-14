@@ -1,0 +1,633 @@
+<title>Matricų daugybos laboratorija</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column of five "bench" sections, each an instrument with its controls on top. */
+:root {
+  --bg: #f4f6f9; --panel: #ffffff; --ink: #14213d; --muted: #5a6478; --line: #d8dee8;
+  --accent: #d9480f; --cool: #1864ab; --good: #2b8a3e; --warn: #c92a2a; --track: #e8ecf2;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e131d; --panel: #161d2a; --ink: #e6eaf2; --muted: #9aa5b8; --line: #2b3546;
+  --accent: #ff8a3d; --cool: #6cb2f5; --good: #69db7c; --warn: #ff6b6b; --track: #222b3a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e131d; --panel: #161d2a; --ink: #e6eaf2; --muted: #9aa5b8; --line: #2b3546;
+  --accent: #ff8a3d; --cool: #6cb2f5; --good: #69db7c; --warn: #ff6b6b; --track: #222b3a; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1120px; margin: 0 auto; }
+header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-block: 22px 8px; }
+header.top .brand { flex: 1 1 320px; min-width: 0; }
+.eyebrow { font: 600 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 700 clamp(28px, 4.2vw, 44px)/1.05 var(--f-display); margin: 8px 0 6px; text-wrap: balance; letter-spacing: -.01em; }
+.sub { color: var(--muted); margin: 0; max-width: 62ch; }
+.langs { display: flex; gap: 4px; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--panel); }
+.langs button { border: 0; background: none; color: var(--muted); font: 600 13px var(--f-mono); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.langs button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line);
+  display: flex; gap: 6px; overflow-x: auto; padding-block: 8px; margin-bottom: 8px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav.toc a { white-space: nowrap; text-decoration: none; color: var(--ink); font: 500 13px var(--f-body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--accent); outline: none; }
+section.bench { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px clamp(14px, 3vw, 28px) 24px; margin-block: 18px; }
+section.bench > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 4px; }
+.num { font: 600 13px var(--f-mono); color: var(--accent); }
+h2 { font: 700 clamp(22px, 2.8vw, 28px)/1.15 var(--f-display); margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 4px 0 16px; max-width: 75ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 14px; }
+.ctl { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.ctl label { white-space: nowrap; }
+select, input[type="range"] { accent-color: var(--accent); }
+select { font: 14px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; max-width: 100%; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { border: 0; background: var(--bg); color: var(--muted); font: 500 13px var(--f-body); padding: 6px 11px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+button.act { font: 600 14px var(--f-body); color: #fff; background: var(--accent); border: 0; border-radius: 7px; padding: 8px 16px; cursor: pointer; }
+button.ghost { font: 500 14px var(--f-body); color: var(--ink); background: none; border: 1px solid var(--line); border-radius: 7px; padding: 7px 14px; cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.note { font-size: 13px; color: var(--muted); }
+.fact { border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--bg); border-radius: 0 6px 6px 0; margin-top: 12px; font-size: 14px; max-width: 90ch; }
+/* race */
+.lanes { display: grid; gap: 8px; }
+.lane { display: grid; grid-template-columns: minmax(120px, 190px) 1fr minmax(92px, 130px); gap: 12px; align-items: center; }
+.lane .who { font: 500 13px var(--f-mono); min-width: 0; overflow-wrap: anywhere; }
+.lane .who small { display: block; color: var(--muted); font: 12px var(--f-body); }
+.track { height: 22px; background: var(--track); border-radius: 4px; overflow: hidden; position: relative; }
+.bar { height: 100%; width: 0; border-radius: 4px; }
+.lane .t { font: 600 13px var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.lane .t.done { color: var(--good); }
+.clock { font: 600 clamp(22px, 3vw, 30px) var(--f-mono); font-variant-numeric: tabular-nums; }
+/* player */
+.player { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 18px; }
+.player + .player { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.heat { width: 100%; display: block; cursor: crosshair; border-radius: 4px; }
+.live { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.live h3 { font: 600 13px var(--f-mono); margin: 0; color: var(--muted); }
+.cores { display: grid; grid-template-columns: 34px 1fr 38px; gap: 3px 8px; align-items: center; font: 12px var(--f-mono); }
+.cores .b { height: 10px; background: var(--track); border-radius: 2px; overflow: hidden; }
+.cores .b i { display: block; height: 100%; width: 0; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font: 12.5px var(--f-mono); }
+.kv b { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.phase-pill { font: 600 12px var(--f-mono); padding: 3px 8px; border-radius: 999px; color: #fff; justify-self: start; }
+.scrub { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.scrub input { flex: 1; min-width: 0; }
+/* charts */
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font: 11px var(--f-mono); }
+.chart .axis { stroke: var(--line); }
+.chart .grid { stroke: var(--line); stroke-dasharray: 2 3; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font: 12px/1.45 var(--f-mono); padding: 6px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); z-index: 3; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font: 12px var(--f-mono); margin-top: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; display: inline-block; border-radius: 2px; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.checks label { display: inline-flex; align-items: center; gap: 6px; font: 12.5px var(--f-mono); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; cursor: pointer; background: var(--bg); }
+.checks label i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.checks input { margin: 0; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.readouts div { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.readouts small { display: block; color: var(--muted); font-size: 12px; }
+.readouts b { font: 600 20px var(--f-mono); font-variant-numeric: tabular-nums; }
+.readouts b.over { color: var(--warn); }
+.readouts b.ok { color: var(--good); }
+table.mini { border-collapse: collapse; font: 12.5px var(--f-mono); width: 100%; }
+table.mini th { text-align: right; color: var(--muted); font-weight: 600; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+table.mini td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+table.mini th:first-child, table.mini td:first-child { text-align: left; }
+.tablewrap { overflow-x: auto; }
+canvas.strip { width: 100%; height: 120px; display: block; }
+footer { color: var(--muted); font-size: 13px; padding-block: 18px 40px; display: grid; gap: 6px; }
+footer a { color: var(--cool); }
+@media (max-width: 860px) { .player { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .lane { grid-template-columns: 1fr 86px; } .lane .track { grid-column: 1 / -1; grid-row: 2; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow" data-i="eyebrow"></div>
+      <h1 data-i="title"></h1>
+      <p class="sub" data-i="subtitle"></p>
+    </div>
+    <div class="langs" role="group" aria-label="Kalba / Language">
+      <button id="lang-lt" type="button" data-lang="lt">LT</button>
+      <button id="lang-en" type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+  <nav class="toc" aria-label="Turinys">
+    <a href="#lenktynes" data-i="nav1"></a><a href="#apkrova" data-i="nav2"></a><a href="#laboratorija" data-i="nav3"></a><a href="#amdalas" data-i="nav4"></a><a href="#tlb" data-i="nav5"></a>
+  </nav>
+
+  <!-- 1. race -->
+  <section class="bench" id="lenktynes">
+    <header><span class="num">01</span><h2 data-i="race_h"></h2></header>
+    <p class="lede" data-i="race_lede"></p>
+    <div class="controls">
+      <button class="act" id="race-play" type="button"></button>
+      <button class="ghost" id="race-reset" type="button" data-i="reset"></button>
+      <div class="ctl"><span data-i="speed"></span><div class="seg" id="race-speed"></div></div>
+      <div class="ctl"><label for="race-n">n =</label><select id="race-n"></select></div>
+      <div class="ctl"><span data-i="sim_time"></span><span class="clock" id="race-clock">0,000 s</span></div>
+    </div>
+    <div class="lanes" id="race-lanes"></div>
+    <p class="fact" id="race-fact"></p>
+  </section>
+
+  <!-- 2. load player -->
+  <section class="bench" id="apkrova">
+    <header><span class="num">02</span><h2 data-i="load_h"></h2></header>
+    <p class="lede" data-i="load_lede"></p>
+    <div id="players"></div>
+    <div class="controls" style="margin-top:14px">
+      <div class="ctl"><label for="cmp-sel" data-i="compare"></label><select id="cmp-sel"></select></div>
+    </div>
+  </section>
+
+  <!-- 3. lab -->
+  <section class="bench" id="laboratorija">
+    <header><span class="num">03</span><h2 data-i="lab_h"></h2></header>
+    <p class="lede" data-i="lab_lede"></p>
+    <div class="controls">
+      <div class="ctl"><span data-i="view"></span><div class="seg" id="lab-mode"></div></div>
+      <div class="ctl" id="lab-w-ctl"><label for="lab-w" data-i="workers"></label><select id="lab-w"></select></div>
+      <div class="ctl" id="lab-n-ctl"><label for="lab-n">n =</label><select id="lab-n"></select></div>
+      <div class="ctl"><span data-i="metric"></span><div class="seg" id="lab-metric"></div></div>
+      <div class="ctl" id="lab-x-ctl"><span data-i="xaxis"></span><div class="seg" id="lab-x"></div></div>
+      <div class="ctl"><span data-i="yaxis"></span><div class="seg" id="lab-y"></div></div>
+    </div>
+    <div class="checks" id="lab-vars"></div>
+    <div class="chart" id="lab-chart"></div>
+    <p class="note" data-i="lab_note"></p>
+  </section>
+
+  <!-- 4. amdahl -->
+  <section class="bench" id="amdalas">
+    <header><span class="num">04</span><h2 data-i="am_h"></h2></header>
+    <p class="lede" data-i="am_lede"></p>
+    <div class="controls">
+      <div class="ctl"><label for="am-var" data-i="variant"></label><select id="am-var"></select></div>
+      <div class="ctl"><label for="am-n">n =</label><select id="am-n"></select></div>
+      <div class="ctl"><label for="am-f">f</label><input id="am-f" type="range" min="0" max="10" step="0.05"><span class="mono" id="am-f-v"></span></div>
+      <div class="ctl"><label for="am-r">r (E/P)</label><input id="am-r" type="range" min="0" max="1" step="0.01"><span class="mono" id="am-r-v"></span></div>
+      <button class="ghost" id="am-reset" type="button" data-i="use_measured"></button>
+    </div>
+    <div class="two">
+      <div class="chart" id="am-chart"></div>
+      <div>
+        <div class="tablewrap"><table class="mini" id="am-table"></table></div>
+        <p class="fact" id="am-fact"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. tlb -->
+  <section class="bench" id="tlb">
+    <header><span class="num">05</span><h2 data-i="tlb_h"></h2></header>
+    <p class="lede" data-i="tlb_lede"></p>
+    <div class="controls">
+      <div class="ctl" style="flex:1 1 320px"><label for="tlb-n">n =</label><input id="tlb-n" type="range" min="1000" max="6000" step="50" style="flex:1"><span class="mono" id="tlb-n-v"></span></div>
+    </div>
+    <div class="readouts" id="tlb-read"></div>
+    <canvas class="strip" id="tlb-strip" height="120"></canvas>
+    <p class="note" data-i="tlb_strip_note"></p>
+    <div class="two">
+      <div class="chart" id="tlb-chart"></div>
+      <div class="chart" id="tlb-meas"></div>
+    </div>
+  </section>
+
+  <footer>
+    <div id="foot-author"></div>
+    <div data-i="foot_data"></div>
+    <div data-i="foot_ai"></div>
+  </footer>
+</div>
+
+<script>
+/*__DATA__*/
+(function () {
+"use strict";
+// ---------------------------------------------------------------- i18n
+const I = {
+  lt: {
+    eyebrow: "Kompiuterių architektūra · 4 laboratorinis darbas · Apple M2 Pro",
+    title: "Matricų daugybos laboratorija",
+    subtitle: "Interaktyvi ataskaitos versija: tikri matavimai, kuriuos galima paleisti, sustabdyti, palyginti ir pakeisti.",
+    nav1: "Lenktynės", nav2: "Branduolių apkrova", nav3: "Matavimai", nav4: "Amdalo dėsnis", nav5: "TLB riba",
+    race_h: "Nuo 208 s iki 0,22 s", race_lede: "Visi variantai daugina tas pačias matricas. Paleiskite lenktynes: juostos juda išmatuotu greičiu (pagreitinkite laiką, jei nenorite laukti 3,5 minutės).",
+    speed: "Laikas", sim_time: "Laikas:", reset: "Iš naujo", play: "Paleisti", pause: "Sustabdyti",
+    done: "baigė", ratio: (a, b, x) => `${a} lenktynes laimi ${x} kartų prieš ${b}. Didžiausias šuolis – seq-base → seq-opt: tas pats vienas branduolys, tik kitaip naudojama atmintis.`,
+    load_h: "Branduolių apkrova vykdymo metu", load_lede: "Tikra telemetrija kas 100 ms: kiekvieno branduolio ir vaizdo plokštės apkrova, dažniai ir atmintis. Spauskite žemėlapį arba tempkite slankiklį.",
+    compare: "Palyginti su", none: "—", phase_fill1: "A pildymas", phase_fill2: "B pildymas (nuosekliai)", phase_mul: "daugyba", phase_none: "programa neveikia",
+    freq: "dažnis", cores_avg: "vid. branduolių", ram: "RAM", swap: "swap",
+    lab_h: "Visi matavimai", lab_lede: "Pakartotinių paleidimų medianos iš results/csv. Užveskite pelę ant taško – pamatysite tikslią reikšmę ir paleidimų skaičių.",
+    view: "Rodinys", by_size: "pagal dydį", by_workers: "pagal gijas", workers: "Gijos", best: "geriausias", metric: "Dydis", total: "visas laikas", mul: "daugyba", speedup: "pagreitėjimas",
+    xaxis: "X", yaxis: "Y", n_axis: "n", ops_axis: "operacijos n³", log: "log", lin: "tiesinė",
+    lab_note: "OpenCL variantai visada naudoja 19 GPU skaičiavimo vienetų. Pagreitėjimas – to paties varianto laikas su 1 gija, padalytas iš laiko su N.",
+    am_h: "Amdalo dėsnis rankomis", am_lede: "S(N) = 1 / (f + (1 − f) / N), kur f – nuosekli dalis (B pildymas). Taškai – išmatuoti, kreivė – dėsnis su jūsų f ir taupiųjų branduolių greičiu r.",
+    variant: "Variantas", use_measured: "Išmatuotos reikšmės",
+    am_meas_f: (f) => `išmatuota f = ${f}`, am_th: ["N", "išmatuota", "Amdalas", "e (Karpas–Flatas)"],
+    am_fact: (n, s8, a8) => `Kai n = ${n}, su 8 gijomis išmatuota ${s8}, dėsnis leidžia ${a8}. Mažoms matricoms skirtumas mažas – ribą lemia nuoseklioji dalis; didelėms dėsnis leidžia daugiau, nei pasiekiama: riboja dažnis, pralaidumas ir taupieji branduoliai.`,
+    tlb_h: "TLB riba: kodėl n ≈ 3547", tlb_lede: "i-j-z ciklas skaito B stulpeliu: kiekvienas žingsnis šoka 4·n baitų. Keiskite n ir stebėkite, kiek puslapių paliečia vienas stulpelis.",
+    stride: "žingsnis", new_line: "nauja podėlio eilutė", new_page: "naujas puslapis", pages: "puslapių stulpelyje", tlb_cap: "/ 3072 TLB įrašų", used: "panaudota iš eilutės", fits: "stulpelio eilutės",
+    fits_l1: "telpa L1", fits_l2: "telpa L2", fits_no: "netelpa L2",
+    tlb_strip_note: "Juostelė – atminties puslapiai (16 KB); taškai – nuoseklūs stulpelio elementai B[0][j], B[1][j], …; spalvos keičiasi su kiekvienu nauju puslapiu.",
+    tlb_chart: "seq-base / openmp-base / mpi-base (1 gija): ns vienai operacijai", tlb_meas: "Išmatuota: vieno skaitymo laikas pagal paliestų puslapių skaičių",
+    foot_data: "Visi skaičiai gauti realiais matavimais šiame kompiuteryje (Apple M2 Pro, 16 GB). Duomenys ir scenarijai – saugykloje.",
+    foot_ai: "Kuriant naudotas DI asistentas Claude Code (Anthropic); skaičių jis neapskaičiavo ir neįvertino.",
+    author: "Autorius", generated: "sugeneruota",
+  },
+  en: {
+    eyebrow: "Computer Architecture · Lab 4 · Apple M2 Pro",
+    title: "Matrix Multiplication Lab",
+    subtitle: "The interactive version of the report: real measurements you can play, pause, compare and change.",
+    nav1: "Race", nav2: "Core load", nav3: "Measurements", nav4: "Amdahl's law", nav5: "TLB cliff",
+    race_h: "From 208 s to 0.22 s", race_lede: "Every variant multiplies the same matrices. Start the race: the bars move at the measured speed (speed time up unless you want to wait 3.5 minutes).",
+    speed: "Time", sim_time: "Time:", reset: "Reset", play: "Start", pause: "Pause",
+    done: "finished", ratio: (a, b, x) => `${a} beats ${b} by ${x}×. The biggest jump is seq-base → seq-opt: the same single core, only a different use of memory.`,
+    load_h: "Core load during the run", load_lede: "Real telemetry every 100 ms: load of every core and of the GPU, clock frequencies and memory. Click the map or drag the slider.",
+    compare: "Compare with", none: "—", phase_fill1: "fill A", phase_fill2: "fill B (sequential)", phase_mul: "multiply", phase_none: "program not running",
+    freq: "clock", cores_avg: "avg cores", ram: "RAM", swap: "swap",
+    lab_h: "All measurements", lab_lede: "Medians of repeated runs from results/csv. Hover a point for the exact value and the number of runs.",
+    view: "View", by_size: "by size", by_workers: "by threads", workers: "Threads", best: "best", metric: "Measure", total: "total time", mul: "multiply", speedup: "speedup",
+    xaxis: "X", yaxis: "Y", n_axis: "n", ops_axis: "operations n³", log: "log", lin: "linear",
+    lab_note: "OpenCL variants always use the 19 GPU compute units. Speedup is the time of the same variant on 1 thread divided by the time on N.",
+    am_h: "Amdahl's law by hand", am_lede: "S(N) = 1 / (f + (1 − f) / N), where f is the sequential part (filling B). Dots are measured; the curve is the law with your f and efficiency-core speed r.",
+    variant: "Variant", use_measured: "Measured values",
+    am_meas_f: (f) => `measured f = ${f}`, am_th: ["N", "measured", "Amdahl", "e (Karp–Flatt)"],
+    am_fact: (n, s8, a8) => `At n = ${n}, 8 threads measured ${s8}, the law allows ${a8}. For small matrices the gap is small – the sequential part sets the limit; for large ones the law allows more than is reached: clock, bandwidth and efficiency cores limit it.`,
+    tlb_h: "TLB cliff: why n ≈ 3547", tlb_lede: "The i-j-z loop reads B by column: every step jumps 4·n bytes. Change n and watch how many pages one column touches.",
+    stride: "stride", new_line: "new cache line", new_page: "new page", pages: "pages per column", tlb_cap: "/ 3072 TLB entries", used: "used of the line", fits: "column's lines",
+    fits_l1: "fit L1", fits_l2: "fit L2", fits_no: "exceed L2",
+    tlb_strip_note: "The strip shows memory pages (16 KB); dots are consecutive column elements B[0][j], B[1][j], …; the colour changes with every new page.",
+    tlb_chart: "seq-base / openmp-base / mpi-base (1 thread): ns per operation", tlb_meas: "Measured: time of one read vs pages touched",
+    foot_data: "All numbers come from real measurements on this machine (Apple M2 Pro, 16 GB). Data and scripts are in the repository.",
+    foot_ai: "Built with the help of the AI assistant Claude Code (Anthropic); it did not compute or estimate any numbers.",
+    author: "Author", generated: "generated",
+  },
+};
+const SCEN = {
+  "seq-base": { lt: "seq-base, n = 3000, 1 gija", en: "seq-base, n = 3000, 1 thread",
+    nlt: "Viena gija nuolat keliauja tarp našiųjų branduolių – iš viso lygiai 1,0 branduolio.", nen: "One thread keeps migrating between the performance cores – exactly 1.0 core in total." },
+  "seq-opt": { lt: "seq-opt, n = 8000, 1 gija", en: "seq-opt, n = 8000, 1 thread",
+    nlt: "Vaizdas toks pat kaip seq-base, bet skaičiuoja 125 kartus greičiau: apkrova nerodo naudingo darbo.", nen: "Looks the same as seq-base, yet computes 125× faster: load does not show useful work." },
+  "openmp-base-t8": { lt: "openmp-base, n = 4000, 8 gijos", en: "openmp-base, n = 4000, 8 threads",
+    nlt: "Visi našieji branduoliai 100 %, bet 104 kartus lėčiau už openmp-opt2 – branduoliai laukia atminties.", nen: "All performance cores at 100 %, yet 104× slower than openmp-opt2 – the cores wait for memory." },
+  "openmp-opt2-t1": { lt: "openmp-opt2, n = 8000, 1 gija", en: "openmp-opt2, n = 8000, 1 thread",
+    nlt: "Viena gija: dirbantis branduolys visą laiką veikia 3,5 GHz.", nen: "One thread: the busy core stays at 3.5 GHz throughout." },
+  "openmp-opt2-t8": { lt: "openmp-opt2, n = 16000, 8 gijos", en: "openmp-opt2, n = 16000, 8 threads",
+    nlt: "B pildymo metu dirba vienas branduolys (Amdalas), daugybos metu – 8; po ≈ 8 s P branduolių dažnis krenta iki ≈ 2,9 GHz.", nen: "While B is filled one core works (Amdahl), then 8; after ≈ 8 s the P-core clock drops to ≈ 2.9 GHz." },
+  "openmp-opt2-t12": { lt: "openmp-opt2, n = 16000, 12 gijų", en: "openmp-opt2, n = 16000, 12 threads",
+    nlt: "Taupieji branduoliai irgi 100 %, bet prideda tik ≈ 7 % greičio.", nen: "The efficiency cores are at 100 % too, but add only ≈ 7 % speed." },
+  "mpi-opt-np8": { lt: "mpi-opt, n = 14000, 8 procesai", en: "mpi-opt, n = 14000, 8 processes",
+    nlt: "Kiekvienas procesas laiko visą B kopiją: atminties stygius, auga swap, taupieji branduoliai užimti sistemos darbu.", nen: "Each process holds a full copy of B: memory pressure, swap grows, the efficiency cores are busy with system work." },
+  "opencl-regblock": { lt: "opencl regblock, n = 16000, GPU", en: "opencl regblock, n = 16000, GPU",
+    nlt: "Vaizdo plokštė 100 %, procesorius vidutiniškai tik 0,11 branduolio – jis dirba tik pildydamas B.", nen: "GPU at 100 %, the CPU only 0.11 cores on average – it works only while filling B." },
+};
+const COLORS = { "seq-base": "#868e96", "seq-opt": "#f08c00", "openmp-base": "#74c0fc", "openmp-opt": "#339af0", "openmp-opt2": "#1c62b0",
+  "mpi-base": "#b197fc", "mpi-opt": "#7048e8", "opencl-naive": "#8ce99a", "opencl-coalesced": "#51cf66", "opencl-tiled": "#2f9e44", "opencl-regblock": "#0b7a57" };
+const PHASE_COLORS = { fill1: "#9fb4cc", fill2: "#c92a2a", mul: "#1c62b0" };
+let lang = "lt";
+try { const s = localStorage.getItem("mm-lang"); if (s === "lt" || s === "en") lang = s; } catch (e) {}
+const t = (k) => I[lang][k] ?? k;
+const fmt = (x, d = 2) => x == null || !isFinite(x) ? "–" : x.toLocaleString(lang === "lt" ? "lt-LT" : "en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtT = (s) => s >= 100 ? fmt(s, 1) + " s" : s >= 10 ? fmt(s, 2) + " s" : fmt(s, 3) + " s";
+const $ = (id) => document.getElementById(id);
+const B = DATA.bench;
+const get = (v, n, w) => (B[v] && B[v][n] && B[v][n][w]) || null;
+const workersOf = (v) => v.startsWith("opencl") ? 19 : null;
+
+// ---------------------------------------------------------------- tiny SVG chart
+function niceTicksLin(min, max, k = 5) {
+  const span = max - min || 1, step0 = span / k, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= step0);
+  const out = []; for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10)); return out;
+}
+function ticksLog(min, max) {
+  const out = []; for (let e = Math.floor(Math.log10(min)); e <= Math.ceil(Math.log10(max)); e++)
+    for (const m of [1, 2, 5]) { const v = m * 10 ** e; if (v >= min * 0.999 && v <= max * 1.001) out.push(v); }
+  return out.length > 9 ? out.filter((v) => /^1/.test(v.toExponential())) : out;
+}
+function chart(host, o) {
+  const W = Math.max(300, host.clientWidth || 600), H = o.height || Math.round(Math.min(380, Math.max(240, W * 0.55)));
+  const m = { l: 56, r: 14, t: o.title ? 26 : 10, b: 40 };
+  const pts = o.series.flatMap((s) => s.points);
+  const xs = pts.map((p) => p[0]).concat(o.xExtra || []), ys = pts.map((p) => p[1]).concat(o.yExtra || []);
+  let [x0, x1] = o.xDomain || [Math.min(...xs), Math.max(...xs)], [y0, y1] = o.yDomain || [Math.min(...ys), Math.max(...ys)];
+  if (o.ylog) { y0 = y0 / 1.4; y1 = y1 * 1.4; } else { y0 = Math.min(0, y0); y1 = y1 * 1.08 || 1; }
+  if (o.xlog) { x0 = x0 / 1.06; x1 = x1 * 1.06; } else if (!o.xDomain) { const pad = (x1 - x0) * 0.03 || 1; x0 -= pad; x1 += pad; }
+  const X = (v) => m.l + (W - m.l - m.r) * (o.xlog ? (Math.log(v) - Math.log(x0)) / (Math.log(x1) - Math.log(x0)) : (v - x0) / (x1 - x0));
+  const Y = (v) => H - m.b - (H - m.t - m.b) * (o.ylog ? (Math.log(v) - Math.log(y0)) / (Math.log(y1) - Math.log(y0)) : (v - y0) / (y1 - y0));
+  const xt = o.xTicks || (o.xlog ? ticksLog(x0, x1) : niceTicksLin(x0, x1, Math.max(3, Math.floor(W / 110))));
+  const yt = o.ylog ? ticksLog(y0, y1) : niceTicksLin(y0, y1, 5);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.title || ""}">`;
+  if (o.title) s += `<text x="${m.l}" y="14" style="font-weight:600">${o.title}</text>`;
+  for (const v of yt) s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 6}" y="${Y(v) + 4}" text-anchor="end">${(o.yFmt || ((x) => fmt(x, x < 1 ? 2 : 0)))(v)}</text>`;
+  for (const v of xt) if (v >= x0 && v <= x1) s += `<line class="grid" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H - m.b}"/><text x="${X(v)}" y="${H - m.b + 16}" text-anchor="middle">${(o.xFmt || ((x) => fmt(x, 0)))(v)}</text>`;
+  s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}"/><line class="axis" x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H - m.b}"/>`;
+  if (o.xLabel) s += `<text x="${(m.l + W - m.r) / 2}" y="${H - 6}" text-anchor="middle">${o.xLabel}</text>`;
+  if (o.yLabel) s += `<text transform="translate(12 ${(m.t + H - m.b) / 2}) rotate(-90)" text-anchor="middle">${o.yLabel}</text>`;
+  for (const vl of o.vlines || []) if (vl.x >= x0 && vl.x <= x1) s += `<line x1="${X(vl.x)}" x2="${X(vl.x)}" y1="${m.t}" y2="${H - m.b}" style="stroke:${vl.color}" stroke-width="1.5" stroke-dasharray="${vl.dash || "5 4"}"/><text x="${X(vl.x) + 5}" y="${m.t + 12}" style="fill:${vl.color}">${vl.label || ""}</text>`;
+  const hits = [];
+  for (const se of o.series) {
+    const p = se.points.filter((q) => q[1] > 0 || !o.ylog);
+    if (se.line !== false && p.length > 1) s += `<path d="${p.map((q, i) => (i ? "L" : "M") + X(q[0]).toFixed(1) + " " + Y(q[1]).toFixed(1)).join("")}" fill="none" style="stroke:${se.color}" stroke-width="${se.width || 2}" ${se.dash ? `stroke-dasharray="${se.dash}"` : ""}/>`;
+    if (se.dots !== false) for (const q of p) { s += `<circle cx="${X(q[0])}" cy="${Y(q[1])}" r="${se.r || 3.5}" style="fill:${se.color}"/>`; hits.push([X(q[0]), Y(q[1]), se, q]); }
+  }
+  for (const mk of o.markers || []) s += `<circle cx="${X(mk.x)}" cy="${Y(mk.y)}" r="7" fill="none" style="stroke:${mk.color}" stroke-width="2.5"/>`;
+  s += `</svg>`;
+  host.innerHTML = s + (o.series.some((se) => se.name) ? `<div class="legend">${o.series.filter((se) => se.name).map((se) => `<span><i style="background:${se.color}"></i>${se.name}</span>`).join("")}</div>` : "");
+  const svg = host.querySelector("svg"), tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; host.appendChild(tip);
+  svg.addEventListener("pointermove", (ev) => {
+    const r = svg.getBoundingClientRect(), k = W / r.width, px = (ev.clientX - r.left) * k, py = (ev.clientY - r.top) * k;
+    let best = null, bd = 900; for (const h of hits) { const d = (h[0] - px) ** 2 + (h[1] - py) ** 2; if (d < bd) { bd = d; best = h; } }
+    if (!best || !o.tip) { tip.hidden = true; return; }
+    tip.innerHTML = o.tip(best[2], best[3]); tip.hidden = false; tip.style.left = best[0] / k + "px"; tip.style.top = best[1] / k + "px";
+  });
+  svg.addEventListener("pointerleave", () => (tip.hidden = true));
+}
+function seg(el, items, cur, on) {
+  el.innerHTML = items.map(([v, label]) => `<button type="button" data-v="${v}" aria-pressed="${v === cur}">${label}</button>`).join("");
+  el.onclick = (e) => { const b = e.target.closest("button"); if (!b) return; el.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); on(b.dataset.v); };
+}
+
+// ---------------------------------------------------------------- 1. race
+const RACE = [["seq-base", 1], ["openmp-base", 8], ["opencl-naive", 19], ["seq-opt", 1], ["mpi-opt", 8], ["openmp-opt2", 8], ["opencl-regblock", 19]];
+const raceSizes = [2000, 2500, 3000, 3500, 3750, 4000].filter((n) => RACE.every(([v, w]) => get(v, n, w)));
+const race = { n: 4000, speed: 1, t: 0, run: false, last: 0 };
+function raceBuild() {
+  $("race-n").innerHTML = raceSizes.map((n) => `<option value="${n}" ${n === race.n ? "selected" : ""}>${n}</option>`).join("");
+  seg($("race-speed"), [["1", "1×"], ["10", "10×"], ["100", "100×"]], String(race.speed), (v) => (race.speed = +v));
+  const lanes = RACE.map(([v, w]) => {
+    const d = get(v, race.n, w);
+    return `<div class="lane"><div class="who">${v}<small>${v.startsWith("opencl") ? "GPU" : w + (lang === "lt" ? (w === 1 ? " gija" : " gijos") : (w === 1 ? " thread" : " threads"))}</small></div>
+      <div class="track"><div class="bar" data-tt="${d[3]}" style="background:${COLORS[v]}"></div></div><div class="t">${fmtT(d[3])}</div></div>`;
+  });
+  $("race-lanes").innerHTML = lanes.join("");
+  const a = get("opencl-regblock", race.n, 19)[3], b = get("seq-base", race.n, 1)[3];
+  $("race-fact").textContent = t("ratio")("opencl regblock", "seq-base", fmt(b / a, 0));
+  raceDraw();
+}
+function raceDraw() {
+  $("race-clock").textContent = fmtT(race.t);
+  document.querySelectorAll("#race-lanes .lane").forEach((ln) => {
+    const T = +ln.querySelector(".bar").dataset.tt, f = Math.min(1, race.t / T), tt = ln.querySelector(".t");
+    ln.querySelector(".bar").style.width = (race.t === 0 ? 0 : f * 100) + "%";
+    tt.classList.toggle("done", race.t >= T);
+    tt.textContent = race.t >= T ? `${t("done")} ${fmtT(T)}` : fmtT(T);
+  });
+  $("race-play").textContent = race.run ? t("pause") : t("play");
+}
+function raceTick(ts) {
+  if (!race.run) return;
+  const dt = race.last ? (ts - race.last) / 1000 : 0; race.last = ts; race.t += dt * race.speed;
+  const maxT = Math.max(...RACE.map(([v, w]) => get(v, race.n, w)[3]));
+  if (race.t >= maxT) { race.t = maxT; race.run = false; }
+  raceDraw(); if (race.run) requestAnimationFrame(raceTick);
+}
+$("race-play").onclick = () => { race.run = !race.run; race.last = 0; if (race.run) requestAnimationFrame(raceTick); raceDraw(); };
+$("race-reset").onclick = () => { race.run = false; race.t = 0; raceDraw(); };
+$("race-n").onchange = (e) => { race.n = +e.target.value; race.t = 0; race.run = false; raceBuild(); };
+
+// ---------------------------------------------------------------- 2. load player
+const INFERNO = ["#000004", "#1b0c41", "#4a0c6b", "#781c6d", "#a52c60", "#cf4446", "#ed6925", "#fb9b06", "#f7d13d", "#fcffa4"];
+const heatCol = (v) => { const x = Math.max(0, Math.min(1, v / 100)) * (INFERNO.length - 1), i = Math.floor(x); return i >= INFERNO.length - 1 ? INFERNO[i] : mix(INFERNO[i], INFERNO[i + 1], x - i); };
+function mix(a, b, f) { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const A = p(a), C = p(b); return `rgb(${A.map((v, i) => Math.round(v + (C[i] - v) * f)).join(",")})`; }
+const players = [];
+function phaseAt(S, tt) {
+  const ph = S.phases; let s = S.fill1_start;
+  for (const k of ["fill1", "fill2", "mul"]) { const d = ph[k] || 0; if (tt >= s && tt < s + d) return k; s += d; }
+  return null;
+}
+function makePlayer(name, host, isMain) {
+  const S = DATA.mon[name]; if (!S) return null;
+  const el = document.createElement("div"); el.className = "player"; host.appendChild(el);
+  const rows = ["GPU", ...[7, 6, 5, 4, 3, 2, 1, 0].map((i) => "P" + i), ...[3, 2, 1, 0].map((i) => "E" + i)];
+  const sel = isMain ? `<div class="controls"><div class="ctl"><label for="scen-sel" data-i="scenario">${lang === "lt" ? "Scenarijus" : "Scenario"}</label><select id="scen-sel">${Object.keys(DATA.mon).map((k) => `<option value="${k}" ${k === name ? "selected" : ""}>${SCEN[k] ? SCEN[k][lang] : k}</option>`).join("")}</select></div>
+      <button class="act" type="button" data-role="play"></button><div class="ctl"><span>${t("speed")}</span><div class="seg" data-role="speed"></div></div></div>` : `<div class="controls"><b class="mono">${SCEN[name] ? SCEN[name][lang] : name}</b></div>`;
+  el.innerHTML = `<div style="min-width:0">${sel}<canvas class="heat" height="300"></canvas>
+      <div class="scrub"><span class="mono note" data-role="tt">0,0 s</span><input type="range" data-role="scrub" min="${S.t[0]}" max="${S.t[S.t.length - 1]}" step="0.1" aria-label="t"></div>
+      <p class="note" style="margin:6px 0 0">${SCEN[name] ? SCEN[name]["n" + lang] : ""} <span class="mono">${S.cmd}</span></p></div>
+    <div class="live"><span class="phase-pill" data-role="phase"></span>
+      <div class="cores" data-role="cores">${rows.map((r) => `<span>${r}</span><span class="b"><i></i></span><span style="text-align:right">0</span>`).join("")}</div>
+      <div class="kv" data-role="kv"></div></div>`;
+  const P = { name, S, el, i: 0, cv: el.querySelector("canvas"), rows };
+  P.draw = function () {
+    const cv = P.cv, W = cv.clientWidth || 600, H = 300, dpr = window.devicePixelRatio || 1;
+    if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = H * dpr; }
+    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    const top = 22, lh = (H - top - 6) / rows.length, n = S.t.length, cw = W / n, T0 = S.t[0], T1 = S.t[n - 1];
+    const X = (tt) => ((tt - T0) / (T1 - T0)) * W;
+    let s = S.fill1_start; for (const k of ["fill1", "fill2", "mul"]) { const d = S.phases[k] || 0; g.fillStyle = PHASE_COLORS[k]; g.fillRect(X(s), 2, Math.max(1.5, X(s + d) - X(s)), 14); s += d; }
+    for (let j = 0; j < n; j++) {
+      const vals = [S.g[j], ...[7, 6, 5, 4, 3, 2, 1, 0].map((i) => S.p[j][i]), ...[3, 2, 1, 0].map((i) => S.e[j][i])];
+      vals.forEach((v, r) => { g.fillStyle = heatCol(v); g.fillRect(j * cw, top + r * lh, cw + 0.6, lh - (r === 0 || r === 8 ? 2 : 0.6)); });
+    }
+    g.fillStyle = getComputedStyle(document.body).color; g.font = "10px " + getComputedStyle(document.body).fontFamily;
+    const x = X(S.t[P.i]); g.strokeStyle = "#ffffff"; g.lineWidth = 2; g.beginPath(); g.moveTo(x, top - 2); g.lineTo(x, H - 4); g.stroke();
+    g.strokeStyle = "#000"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x + 1.5, top - 2); g.lineTo(x + 1.5, H - 4); g.stroke();
+  };
+  P.update = function () {
+    const j = P.i, tt = S.t[j], vals = [S.g[j], ...[7, 6, 5, 4, 3, 2, 1, 0].map((i) => S.p[j][i]), ...[3, 2, 1, 0].map((i) => S.e[j][i])];
+    el.querySelectorAll('[data-role="cores"] .b i').forEach((b, r) => { b.style.width = vals[r] + "%"; b.style.background = heatCol(Math.max(35, vals[r])); });
+    el.querySelectorAll('[data-role="cores"] > span:nth-child(3n)').forEach((sp, r) => (sp.textContent = vals[r]));
+    const ph = phaseAt(S, tt), pill = el.querySelector('[data-role="phase"]');
+    pill.textContent = ph ? t("phase_" + ph) : t("phase_none"); pill.style.background = ph ? PHASE_COLORS[ph] : "#868e96";
+    el.querySelector('[data-role="kv"]').innerHTML = `<span>P ${t("freq")}</span><b>${S.fp[j]} MHz</b><span>E ${t("freq")}</span><b>${S.fe[j]} MHz</b><span>GPU ${t("freq")}</span><b>${S.fg[j]} MHz</b>
+      <span>${t("ram")}</span><b>${fmt(S.ram[j], 1)} GB</b><span>${t("swap")}</span><b>${fmt(S.swap[j], 2)} GB</b><span>${t("cores_avg")}</span><b>${S.cores != null ? fmt(S.cores, 2) : "–"}</b>`;
+    el.querySelector('[data-role="tt"]').textContent = fmt(tt, 1) + " s"; el.querySelector('[data-role="scrub"]').value = tt;
+    P.draw();
+  };
+  P.seek = function (tt) { let j = 0; while (j < S.t.length - 1 && S.t[j + 1] <= tt) j++; P.i = j; P.update(); };
+  el.querySelector('[data-role="scrub"]').oninput = (e) => syncSeek(+e.target.value);
+  P.cv.addEventListener("click", (e) => { const r = P.cv.getBoundingClientRect(); syncSeek(S.t[0] + ((e.clientX - r.left) / r.width) * (S.t[S.t.length - 1] - S.t[0])); });
+  return P;
+}
+const play = { on: false, speed: 1, last: 0, tt: 0 };
+function syncSeek(tt) { play.tt = tt; players.forEach((p) => p.seek(tt)); }
+function playTick(ts) {
+  if (!play.on) return;
+  const dt = play.last ? (ts - play.last) / 1000 : 0; play.last = ts; play.tt += dt * play.speed;
+  const end = Math.max(...players.map((p) => p.S.t[p.S.t.length - 1]));
+  if (play.tt >= end) { play.tt = end; play.on = false; }
+  syncSeek(play.tt); setPlayLabel(); if (play.on) requestAnimationFrame(playTick);
+}
+function setPlayLabel() { const b = document.querySelector('#players [data-role="play"]'); if (b) b.textContent = play.on ? t("pause") : t("play"); }
+let mainScen = "openmp-opt2-t8", cmpScen = "";
+function buildPlayers() {
+  const host = $("players"); host.innerHTML = ""; players.length = 0;
+  const p1 = makePlayer(mainScen, host, true); if (p1) players.push(p1);
+  if (cmpScen && cmpScen !== mainScen) { const p2 = makePlayer(cmpScen, host, false); if (p2) players.push(p2); }
+  $("scen-sel").onchange = (e) => { mainScen = e.target.value; buildPlayers(); };
+  seg(host.querySelector('[data-role="speed"]'), [["1", "1×"], ["3", "3×"], ["10", "10×"]], String(play.speed), (v) => (play.speed = +v));
+  host.querySelector('[data-role="play"]').onclick = () => { play.on = !play.on; play.last = 0; if (play.tt >= Math.max(...players.map((p) => p.S.t[p.S.t.length - 1]))) play.tt = players[0].S.t[0]; setPlayLabel(); if (play.on) requestAnimationFrame(playTick); };
+  setPlayLabel();
+  if (!play.tt) { const S = players[0].S; play.tt = S.fill1_start + (S.phases.fill1 || 0) + (S.phases.fill2 || 0) + (S.phases.mul || 0) * 0.4; }
+  syncSeek(play.tt);
+  $("cmp-sel").innerHTML = `<option value="">${t("none")}</option>` + Object.keys(DATA.mon).map((k) => `<option value="${k}" ${k === cmpScen ? "selected" : ""}>${SCEN[k] ? SCEN[k][lang] : k}</option>`).join("");
+}
+$("cmp-sel").onchange = (e) => { cmpScen = e.target.value; buildPlayers(); };
+
+// ---------------------------------------------------------------- 3. lab
+const lab = { mode: "size", w: "best", n: 4000, metric: "total", x: "n", y: "log", vars: new Set(["seq-base", "seq-opt", "openmp-opt2", "mpi-opt", "opencl-regblock"]) };
+const ALLV = Object.keys(B);
+function labBuild() {
+  seg($("lab-mode"), [["size", t("by_size")], ["workers", t("by_workers")]], lab.mode, (v) => { lab.mode = v; labBuild(); });
+  $("lab-w").innerHTML = ["best", 1, 2, 4, 8, 12].map((w) => `<option value="${w}" ${String(w) === String(lab.w) ? "selected" : ""}>${w === "best" ? t("best") : w}</option>`).join("");
+  const sizes = [...new Set(ALLV.flatMap((v) => Object.keys(B[v]).map(Number)))].sort((a, b) => a - b);
+  $("lab-n").innerHTML = sizes.map((n) => `<option value="${n}" ${n === lab.n ? "selected" : ""}>${n}</option>`).join("");
+  const metrics = lab.mode === "size" ? [["total", t("total")], ["mul", t("mul")]] : [["total", t("total")], ["speedup", t("speedup")]];
+  if (!metrics.some((m) => m[0] === lab.metric)) lab.metric = "total";
+  seg($("lab-metric"), metrics, lab.metric, (v) => { lab.metric = v; labDraw(); });
+  seg($("lab-x"), [["n", t("n_axis")], ["ops", t("ops_axis")]], lab.x, (v) => { lab.x = v; labDraw(); });
+  seg($("lab-y"), [["log", t("log")], ["lin", t("lin")]], lab.y, (v) => { lab.y = v; labDraw(); });
+  $("lab-w-ctl").hidden = lab.mode !== "size"; $("lab-x-ctl").hidden = lab.mode !== "size"; $("lab-n-ctl").hidden = lab.mode !== "workers";
+  const shown = lab.mode === "size" ? ALLV : ALLV.filter((v) => !v.startsWith("opencl") && !v.startsWith("seq"));
+  $("lab-vars").innerHTML = shown.map((v) => `<label><input type="checkbox" id="lv-${v}" value="${v}" ${lab.vars.has(v) ? "checked" : ""}><i style="background:${COLORS[v]}"></i>${v}</label>`).join("");
+  $("lab-vars").onchange = (e) => { if (e.target.checked) lab.vars.add(e.target.value); else lab.vars.delete(e.target.value); labDraw(); };
+  labDraw();
+}
+function labDraw() {
+  const host = $("lab-chart"), series = [];
+  if (lab.mode === "size") {
+    const col = lab.metric === "mul" ? 2 : 3;
+    for (const v of ALLV) {
+      if (!lab.vars.has(v)) continue;
+      const pts = [];
+      for (const n of Object.keys(B[v]).map(Number)) {
+        const ws = B[v][n]; let rec, w;
+        if (lab.w === "best") { w = +Object.keys(ws).sort((a, b) => ws[a][col] - ws[b][col])[0]; rec = ws[w]; }
+        else { w = workersOf(v) || +lab.w; rec = ws[w]; }
+        if (rec) pts.push([lab.x === "ops" ? n ** 3 : n, rec[col], { n, w, c: rec[4] }]);
+      }
+      if (pts.length) series.push({ name: v, color: COLORS[v], points: pts.sort((a, b) => a[0] - b[0]) });
+    }
+    chart(host, { series, xlog: lab.x === "ops" ? false : true, ylog: lab.y === "log",
+      xFmt: lab.x === "ops" ? (x) => (x / 1e12).toLocaleString(lang === "lt" ? "lt-LT" : "en-US", { maximumFractionDigits: 1 }) + "·10¹²" : (x) => String(Math.round(x)),
+      xTicks: lab.x === "ops" ? null : [2000, 3000, 4000, 6000, 8000, 12000, 16000], yFmt: (y) => fmt(y, y < 1 ? 2 : 0),
+      xLabel: lab.x === "ops" ? "n·k·p" : "n = k = p", yLabel: lab.metric === "mul" ? t("mul") + ", s" : t("total") + ", s",
+      tip: (se, q) => `${se.name}<br>n = ${q[2].n}, ${q[2].w === 19 ? "GPU" : t("workers").toLowerCase() + ": " + q[2].w}<br>${fmtT(q[1])}<br>${lang === "lt" ? "paleidimų" : "runs"}: ${q[2].c}` });
+  } else {
+    for (const v of ALLV) {
+      if (!lab.vars.has(v) || v.startsWith("opencl") || v.startsWith("seq") || !B[v][lab.n]) continue;
+      const ws = B[v][lab.n], t1 = ws[1] ? ws[1][3] : null, pts = [];
+      for (const w of Object.keys(ws).map(Number)) { const y = lab.metric === "speedup" ? (t1 ? t1 / ws[w][3] : null) : ws[w][3]; if (y) pts.push([w, y, { w, c: ws[w][4] }]); }
+      if (pts.length) series.push({ name: v, color: COLORS[v], points: pts.sort((a, b) => a[0] - b[0]) });
+    }
+    if (lab.metric === "speedup") series.push({ name: lang === "lt" ? "idealus" : "ideal", color: "#868e96", dash: "5 4", dots: false, points: [[1, 1], [12, 12]] });
+    chart(host, { series, xlog: false, ylog: lab.y === "log" && lab.metric !== "speedup", xDomain: [0.5, 12.5], xTicks: [1, 2, 4, 8, 12],
+      yFmt: (y) => fmt(y, lab.metric === "speedup" ? 0 : y < 1 ? 2 : 0), xLabel: t("workers"), yLabel: lab.metric === "speedup" ? t("speedup") : t("total") + ", s",
+      tip: (se, q) => q[2] ? `${se.name}<br>n = ${lab.n}, ${t("workers").toLowerCase()}: ${q[2].w}<br>${lab.metric === "speedup" ? fmt(q[1], 2) + "×" : fmtT(q[1])}<br>${lang === "lt" ? "paleidimų" : "runs"}: ${q[2].c}` : "" });
+  }
+}
+$("lab-w").onchange = (e) => { lab.w = e.target.value === "best" ? "best" : +e.target.value; labDraw(); };
+$("lab-n").onchange = (e) => { lab.n = +e.target.value; labDraw(); };
+
+// ---------------------------------------------------------------- 4. amdahl
+const am = { v: "openmp-opt2", n: 4000, f: 3, r: 0.15 };
+const amSizes = (v) => Object.keys(B[v]).map(Number).filter((n) => B[v][n][1] && Object.keys(B[v][n]).length > 2);
+const measF = () => { const d = get(am.v, am.n, 1); return d ? (100 * d[1]) / d[3] : 3; };
+const amdahl = (f, N) => 1 / (f + (1 - f) / N);
+const neff = (N) => Math.min(N, 8) + am.r * Math.max(N - 8, 0);
+function amBuild() {
+  $("am-var").innerHTML = ["openmp-opt2", "mpi-opt", "openmp-opt"].map((v) => `<option value="${v}" ${v === am.v ? "selected" : ""}>${v}</option>`).join("");
+  const sizes = amSizes(am.v); if (!sizes.includes(am.n)) am.n = sizes.includes(4000) ? 4000 : sizes[0];
+  $("am-n").innerHTML = sizes.map((n) => `<option value="${n}" ${n === am.n ? "selected" : ""}>${n}</option>`).join("");
+  $("am-f").value = am.f; $("am-r").value = am.r; amDraw();
+}
+function amDraw() {
+  $("am-f-v").textContent = fmt(am.f, 2) + " %"; $("am-r-v").textContent = fmt(am.r, 2);
+  const f = am.f / 100, ws = B[am.v][am.n], t1 = ws[1][3];
+  const meas = Object.keys(ws).map(Number).sort((a, b) => a - b).map((w) => [w, t1 / ws[w][3]]);
+  const curve = [], ideal = []; for (let N = 1; N <= 12.001; N += 0.25) { curve.push([N, amdahl(f, neff(N))]); ideal.push([N, neff(N)]); }
+  chart($("am-chart"), { series: [
+      { name: lang === "lt" ? "idealus (N_eff)" : "ideal (N_eff)", color: "#868e96", dash: "5 4", dots: false, points: ideal },
+      { name: lang === "lt" ? "Amdalo dėsnis" : "Amdahl's law", color: "var(--accent)", dots: false, width: 2.5, points: curve },
+      { name: lang === "lt" ? "išmatuota" : "measured", color: COLORS[am.v], line: true, r: 5, points: meas }],
+    xlog: false, ylog: false, xDomain: [0.5, 12.5], xTicks: [1, 2, 4, 6, 8, 10, 12], yDomain: [0, 12], xLabel: "N", yLabel: lang === "lt" ? "pagreitėjimas" : "speedup",
+    yFmt: (y) => fmt(y, 0), tip: (se, q) => `${se.name}<br>N = ${q[0]}<br>${fmt(q[1], 2)}×` });
+  const rows = meas.filter(([N]) => N > 1).map(([N, S]) => { const e = (1 / S - 1 / N) / (1 - 1 / N); return `<tr><td>${N}</td><td>${fmt(S, 2)}×</td><td>${fmt(amdahl(f, neff(N)), 2)}×</td><td>${fmt(100 * e, 1)} %</td></tr>`; });
+  $("am-table").innerHTML = `<tr>${t("am_th").map((h) => `<th>${h}</th>`).join("")}</tr>` + rows.join("");
+  const s8 = meas.find((m) => m[0] === 8);
+  $("am-fact").textContent = `${t("am_meas_f")(fmt(measF(), 2) + " %")}. ` + (s8 ? t("am_fact")(am.n, fmt(s8[1], 2) + "×", fmt(amdahl(measF() / 100, neff(8)), 2) + "×") : "");
+}
+$("am-var").onchange = (e) => { am.v = e.target.value; amBuild(); am.f = +measF().toFixed(2); amBuild(); };
+$("am-n").onchange = (e) => { am.n = +e.target.value; am.f = +measF().toFixed(2); amBuild(); };
+$("am-f").oninput = (e) => { am.f = +e.target.value; amDraw(); };
+$("am-r").oninput = (e) => { am.r = +e.target.value; amDraw(); };
+$("am-reset").onclick = () => { am.f = +measF().toFixed(2); am.r = 0.15; amBuild(); };
+
+// ---------------------------------------------------------------- 5. tlb
+const tlbS = { n: 4000 };
+const PAGE = 16384, LINE = 128;
+function tlbDraw() {
+  const n = tlbS.n, stride = 4 * n, pages = Math.ceil((4 * n * n) / PAGE), pNew = Math.min(1, stride / PAGE), foot = n * LINE;
+  $("tlb-n-v").textContent = String(n);
+  const over = pages > 3072;
+  $("tlb-read").innerHTML = `<div><small>${t("stride")}</small><b>${fmt(stride, 0)} B</b></div>
+    <div><small>${t("new_line")}</small><b>100 %</b></div>
+    <div><small>${t("new_page")}</small><b>${fmt(100 * pNew, 1)} %</b></div>
+    <div><small>${t("pages")}</small><b class="${over ? "over" : "ok"}">${fmt(pages, 0)}</b><small>${t("tlb_cap")}</small></div>
+    <div><small>${t("used")}</small><b>${fmt((100 * 4) / LINE, 1)} %</b></div>
+    <div><small>${t("fits")} (${fmt(foot / 1024, 0)} KB)</small><b>${foot <= 131072 ? t("fits_l1") : foot <= 16 << 20 ? t("fits_l2") : t("fits_no")}</b></div>`;
+  // strip: memory pages and consecutive column elements
+  const cv = $("tlb-strip"), W = cv.clientWidth || 600, H = 120, dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(W * dpr); cv.height = H * dpr; const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const bytes = stride * 7.5, scale = (W - 20) / bytes, cs = getComputedStyle(document.body);
+  const ink = cs.color, muted = getComputedStyle(document.documentElement).getPropertyValue("--muted"), line = getComputedStyle(document.documentElement).getPropertyValue("--line");
+  const pal = ["#1c62b0", "#d9480f", "#2b8a3e", "#7048e8", "#c92a2a", "#0b7a57", "#f08c00"];
+  for (let p = 0; p * PAGE < bytes; p++) {
+    const x = 10 + p * PAGE * scale; g.fillStyle = p % 2 ? "rgba(128,140,160,0.18)" : "rgba(128,140,160,0.08)"; g.fillRect(x, 40, PAGE * scale, 40);
+    g.strokeStyle = "#c92a2a"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(x, 34); g.lineTo(x, 86); g.stroke(); g.setLineDash([]);
+  }
+  let lastPage = -1, col = -1;
+  for (let i = 0; i < 8; i++) {
+    const off = 2000 + i * stride; if (off > bytes) break; const x = 10 + off * scale, page = Math.floor(off / PAGE);
+    if (page !== lastPage) { col++; lastPage = page; }
+    g.fillStyle = pal[col % pal.length]; g.beginPath(); g.arc(x, 60, 6, 0, 7); g.fill();
+    g.fillStyle = ink; g.font = "11px " + cs.fontFamily; g.textAlign = "center"; g.fillText(`B[${i}][j]`, x, 102);
+    if (i) { const px = 10 + (off - stride) * scale; g.strokeStyle = muted; g.lineWidth = 1.2; g.beginPath(); g.moveTo(px + 7, 24); g.quadraticCurveTo((px + x) / 2, 8, x - 7, 24); g.stroke(); }
+  }
+  g.fillStyle = muted; g.textAlign = "left"; g.fillText(`+${fmt(stride, 0)} B`, 14, 14);
+  // charts
+  const series = ["seq-base", "openmp-base", "mpi-base"].map((v) => ({ name: v, color: COLORS[v],
+    points: Object.keys(B[v]).map(Number).filter((k) => k <= 4000 && B[v][k][1]).sort((a, b) => a - b).map((k) => [k, (B[v][k][1][2] / k ** 3) * 1e9]) }));
+  const sb = series[0].points; let yN = null;
+  for (let i = 0; i < sb.length - 1; i++) if (n >= sb[i][0] && n <= sb[i + 1][0]) yN = sb[i][1] + ((n - sb[i][0]) / (sb[i + 1][0] - sb[i][0])) * (sb[i + 1][1] - sb[i][1]);
+  chart($("tlb-chart"), { title: t("tlb_chart"), series, xlog: false, ylog: false, xDomain: [1900, 4100], xTicks: [2000, 2500, 3000, 3500, 4000],
+    vlines: [{ x: 3547, label: "3547", color: "#c92a2a" }, { x: Math.min(4090, Math.max(1910, n)), color: "var(--accent)", dash: "1 0" }],
+    markers: yN ? [{ x: n, y: yN, color: "var(--accent)" }] : [], xFmt: (x) => String(x), yFmt: (y) => fmt(y, 1), xLabel: "n", yLabel: "ns",
+    tip: (se, q) => `${se.name}<br>n = ${q[0]}<br>${fmt(q[1], 2)} ns` });
+  const tl = DATA.mem.tlb.filter((q) => q[0] <= 6144);
+  const px = Math.max(16, Math.min(6144, pages));
+  let yP = null; for (let i = 0; i < tl.length - 1; i++) if (px >= tl[i][0] && px <= tl[i + 1][0]) yP = tl[i][1];
+  chart($("tlb-meas"), { title: t("tlb_meas"), series: [{ color: "var(--cool)", points: tl }], xlog: true, ylog: false, xTicks: [16, 64, 256, 1024, 3072, 6144],
+    vlines: [{ x: 3072, label: "3072", color: "#c92a2a" }, { x: px, color: "var(--accent)", dash: "1 0" }], markers: yP != null ? [{ x: px, y: yP, color: "var(--accent)" }] : [],
+    xFmt: (x) => String(x), yFmt: (y) => fmt(y, 0), xLabel: t("pages"), yLabel: "ns", tip: (se, q) => `${fmt(q[0], 0)} ${lang === "lt" ? "puslapių" : "pages"}<br>${fmt(q[1], 2)} ns` });
+}
+$("tlb-n").oninput = (e) => { tlbS.n = +e.target.value; tlbDraw(); };
+
+// ---------------------------------------------------------------- language + init
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i]").forEach((el) => { const v = I[lang][el.dataset.i]; if (typeof v === "string") el.textContent = v; });
+  document.querySelectorAll(".langs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === lang));
+  document.title = t("title");
+  $("foot-author").innerHTML = `<a href="${DATA.repo}" target="_blank" rel="noopener">${DATA.repo.replace("https://", "")}</a> · ${t("generated")} ${DATA.generated}`;
+  raceBuild(); buildPlayers(); labBuild(); amBuild(); $("tlb-n").value = tlbS.n; tlbDraw();
+}
+document.querySelectorAll(".langs button").forEach((b) => (b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem("mm-lang", lang); } catch (e) {} applyLang(); }));
+am.f = +measF().toFixed(2);
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { players.forEach((p) => p.update()); labDraw(); amDraw(); tlbDraw(); }, 150); });
+applyLang();
+})();
+</script>

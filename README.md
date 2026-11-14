@@ -9,6 +9,7 @@ Analizė:
 
 Kompiuteris ir programinė įranga: [docs/machine.md](docs/machine.md).  
 
+**Interaktyvi versija:** https://dimabreeze.github.io/VU-ComputerArchitecture-Parallel-Lab/ (GitHub Pages) arba [reports/interactive/index.html](reports/interactive/index.html) – atidaroma naršyklėje be serverio (`make interactive`, `make serve-interactive`).  
 **Ataskaita (PDF):** [reports/ataskaita/](reports/ataskaita/) – bendroji dalis, 1 dalis OpenMP, 2 dalis MPI, 3 dalis OpenCL, bendros išvados ir visa ataskaita viename faile.  
 Etapų ataskaitos: [reports/README.md](reports/README.md); 
 Pristatymai: [reports/pptx/](reports/pptx/).
@@ -45,6 +46,7 @@ scripts/reports.sh     etapų ataskaitos -> reports/<stage>/plots/ (kiekvieno et
 scripts/memory.sh      atminties matavimai -> results/memory/*.csv, scripts/plot_memory.py -> docs/img/memory/
 scripts/monitor.py     CPU / GPU apkrova paleidimo metu: btop / macmon ekrano nuotraukos -> docs/img/screens/, telemetrija -> results/monitor/
 scripts/plot_monitor.py  branduolių apkrovos šilumos žemėlapiai -> docs/img/load/
+scripts/build_interactive.py  interaktyvi versija: scripts/interactive/page.html + results/ -> reports/interactive/index.html
 scripts/build_report.py  ataskaita: reports/ataskaita/src/*.md -> reports/ataskaita/*.pdf (Google Chrome be lango)
 scripts/report_figures.sh, scripts/plot_final.py  ataskaitos grafikai -> reports/ataskaita/img/
 ```
@@ -71,6 +73,7 @@ make reports               # visos etapų ataskaitos -> reports/<stage>/ (arba S
 make memory                # atminties delsa, TLB, pralaidumas -> docs/img/memory/ (≈ 3 min.)
 make monitor               # branduolių apkrova: ekrano nuotraukos ir šilumos žemėlapiai (≈ 5 min.; brew install btop macmon tmux charmbracelet/tap/freeze)
 make report                # ataskaita PDF: 0_ivadas, 1_openmp, 2_mpi, 3_opencl, 4_isvados + ataskaita_visa (arba PARTS="0_ivadas")
+make interactive           # interaktyvi versija -> reports/interactive/index.html (make serve-interactive – http://localhost:8000)
 make compdb                # compile_commands.json IDE aplinkai
 ```
 

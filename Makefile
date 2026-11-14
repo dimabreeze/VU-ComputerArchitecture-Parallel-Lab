@@ -43,7 +43,7 @@ SRCS    := $(foreach t,$(TECHS),$(wildcard src/$(t)/*.cpp))
 # src/openmp/base.cpp -> openmp-base
 NAMES   := $(foreach s,$(SRCS),$(word 2,$(subst /, ,$(s)))-$(basename $(notdir $(s))))
 
-.PHONY: all clean bench plot reports memory monitor report compdb list $(TECHS) $(NAMES)
+.PHONY: all clean bench plot reports memory monitor report interactive serve-interactive compdb list $(TECHS) $(NAMES)
 
 all: $(NAMES)
 
@@ -100,6 +100,16 @@ memory: build/tools/memlat .venv
 report: .venv
 	scripts/report_figures.sh
 	.venv/bin/python scripts/build_report.py $(PARTS)
+
+# interactive report: one self-contained page -> reports/interactive/index.html
+# make interactive          build it (data from results/)
+# make serve-interactive    serve it on http://localhost:8000 (or open the file directly)
+# published by .github/workflows/pages.yml to https://dimabreeze.github.io/VU-ComputerArchitecture-Parallel-Lab/
+interactive: .venv
+	.venv/bin/python scripts/build_interactive.py
+
+serve-interactive: interactive
+	cd reports/interactive && ../../.venv/bin/python -m http.server 8000
 
 # CPU / GPU load during runs: btop / macmon screenshots (docs/img/screens/) and per-core
 # heat maps (docs/img/load/); needs: brew install btop macmon tmux charmbracelet/tap/freeze
