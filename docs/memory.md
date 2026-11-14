@@ -108,8 +108,8 @@ vykdo kelis praleidimus vienu metu.
   4,4×.
 
 **`seq-opt`, `openmp-opt2` (blokavimas).** B blokas laikomas L2 ir panaudojamas daug kartų,
-todėl operatyviosios atminties srautas sumažėja dešimtis kartų, o TLB praleidimų beveik
-nebėra (supakuotas blokas – ištisinis). Vienos operacijos kaina pastovi nuo n = 2000 iki
+todėl operatyviosios atminties srautas sumažėja dešimtis kartų. `seq-opt` B bloką dar ir
+supakuoja į ištisinį buferį, todėl TLB praleidimų beveik nebėra; `openmp-opt2` B nepakuoja. Vienos operacijos kaina pastovi nuo n = 2000 iki
 16000 ([seq_opt.md](seq_opt.md), [openmp_opt2.md](openmp_opt2.md)).
 
 ## 6. Pakartojimas

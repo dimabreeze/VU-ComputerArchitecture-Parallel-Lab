@@ -1,0 +1,25 @@
+{
+ "scenario": "openmp-base-t8",
+ "command": [
+  "build/openmp-base",
+  "-s",
+  "4000",
+  "-t",
+  "8"
+ ],
+ "start": 1794690065.03715,
+ "end": 1794690094.880314,
+ "capture_at": 18,
+ "phases": {
+  "fill1": 0.00648,
+  "fill2": 0.061717,
+  "mul": 29.729256,
+  "total": 29.797453
+ },
+ "time": {
+  "real": 29.83,
+  "user": 234.05,
+  "sys": 1.39
+ },
+ "returncode": 0
+}

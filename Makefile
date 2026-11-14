@@ -12,6 +12,7 @@
 #   make bench                    benchmark sweep -> rows appended to results/csv/*.csv
 #   make memory                   memory microbenchmarks (build/tools/memlat) -> results/memory/*.csv
 #                                 and plots docs/img/memory/*.png (docs/memory.md)
+#   make monitor                  CPU / GPU load: screenshots + heat maps -> docs/img/screens, docs/img/load
 #   make compdb                   compile_commands.json for the IDE
 #
 # NOTE: the project path contains spaces, so only relative paths are used here.
@@ -42,7 +43,7 @@ SRCS    := $(foreach t,$(TECHS),$(wildcard src/$(t)/*.cpp))
 # src/openmp/base.cpp -> openmp-base
 NAMES   := $(foreach s,$(SRCS),$(word 2,$(subst /, ,$(s)))-$(basename $(notdir $(s))))
 
-.PHONY: all clean bench plot reports memory compdb list $(TECHS) $(NAMES)
+.PHONY: all clean bench plot reports memory monitor report compdb list $(TECHS) $(NAMES)
 
 all: $(NAMES)
 
@@ -92,6 +93,21 @@ build/tools/memlat: src/tools/memlat.cpp
 # run on an otherwise idle machine: takes about 3 minutes
 memory: build/tools/memlat .venv
 	scripts/memory.sh
+
+# report (PDF): reports/ataskaita/src/*.md -> reports/ataskaita/*.pdf (headless Google Chrome)
+# make report                   all parts + ataskaita_visa.pdf
+# make report PARTS="0_ivadas"  only these parts
+report: .venv
+	scripts/report_figures.sh
+	.venv/bin/python scripts/build_report.py $(PARTS)
+
+# CPU / GPU load during runs: btop / macmon screenshots (docs/img/screens/) and per-core
+# heat maps (docs/img/load/); needs: brew install btop macmon tmux charmbracelet/tap/freeze
+# make monitor                         all scenarios (about 5 minutes, idle machine)
+# make monitor SCENARIOS="seq-base"    only these (see SCENARIOS in scripts/monitor.py)
+monitor: all .venv
+	.venv/bin/python scripts/monitor.py $(SCENARIOS)
+	.venv/bin/python scripts/plot_monitor.py
 
 # ---- IDE support: compile_commands.json for clangd ----
 MPI_CFLAGS := $(shell $(MPICXX) --showme:compile 2>/dev/null)

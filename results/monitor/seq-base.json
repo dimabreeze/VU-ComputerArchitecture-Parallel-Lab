@@ -1,0 +1,23 @@
+{
+ "scenario": "seq-base",
+ "command": [
+  "build/seq-base",
+  "-s",
+  "3000"
+ ],
+ "start": 1794690028.2027872,
+ "end": 1794690054.98319,
+ "capture_at": 16,
+ "phases": {
+  "fill1": 0.01724,
+  "fill2": 0.03611,
+  "mul": 26.69832,
+  "total": 26.75167
+ },
+ "time": {
+  "real": 26.76,
+  "user": 26.22,
+  "sys": 0.54
+ },
+ "returncode": 0
+}

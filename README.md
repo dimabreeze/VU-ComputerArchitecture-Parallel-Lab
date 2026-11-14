@@ -9,6 +9,7 @@ Analizė:
 
 Kompiuteris ir programinė įranga: [docs/machine.md](docs/machine.md).  
 
+**Ataskaita (PDF):** [reports/ataskaita/](reports/ataskaita/) – bendroji dalis, 1 dalis OpenMP, 2 dalis MPI, 3 dalis OpenCL, bendros išvados ir visa ataskaita viename faile.  
 Etapų ataskaitos: [reports/README.md](reports/README.md); 
 Pristatymai: [reports/pptx/](reports/pptx/).
 
@@ -42,6 +43,10 @@ scripts/bench.sh       matavimų serija -> po vieną CSV kiekvienai konfigūraci
 scripts/plot.py        grafikai iš CSV (filtrai, etapų pavadinimai, žymės: žr. failo pradžią)
 scripts/reports.sh     etapų ataskaitos -> reports/<stage>/plots/ (kiekvieno etapo README.md juos paaiškina)
 scripts/memory.sh      atminties matavimai -> results/memory/*.csv, scripts/plot_memory.py -> docs/img/memory/
+scripts/monitor.py     CPU / GPU apkrova paleidimo metu: btop / macmon ekrano nuotraukos -> docs/img/screens/, telemetrija -> results/monitor/
+scripts/plot_monitor.py  branduolių apkrovos šilumos žemėlapiai -> docs/img/load/
+scripts/build_report.py  ataskaita: reports/ataskaita/src/*.md -> reports/ataskaita/*.pdf (Google Chrome be lango)
+scripts/report_figures.sh, scripts/plot_final.py  ataskaitos grafikai -> reports/ataskaita/img/
 ```
 
 Kiekvienas `src/<tech>/<variant>.cpp` automatiškai tampa tikslu (target) `<tech>-<variant>` ir vykdomuoju failu `build/<tech>-<variant>`.
@@ -64,6 +69,8 @@ make bench                 # visa matavimų serija (aplinkos kintamieji: SIZES, 
 make plot                  # grafikai iš results/csv/*.csv -> results/plots/ (arba IN=katalogas|failai OUT=katalogas)
 make reports               # visos etapų ataskaitos -> reports/<stage>/ (arba STAGES="02 05")
 make memory                # atminties delsa, TLB, pralaidumas -> docs/img/memory/ (≈ 3 min.)
+make monitor               # branduolių apkrova: ekrano nuotraukos ir šilumos žemėlapiai (≈ 5 min.; brew install btop macmon tmux charmbracelet/tap/freeze)
+make report                # ataskaita PDF: 0_ivadas, 1_openmp, 2_mpi, 3_opencl, 4_isvados + ataskaita_visa (arba PARTS="0_ivadas")
 make compdb                # compile_commands.json IDE aplinkai
 ```
 

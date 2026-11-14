@@ -1,0 +1,26 @@
+{
+ "scenario": "mpi-opt-np8",
+ "command": [
+  "mpirun",
+  "-np",
+  "8",
+  "build/mpi-opt",
+  "-s",
+  "14000"
+ ],
+ "start": 1794690184.374655,
+ "end": 1794690200.686151,
+ "capture_at": 12,
+ "phases": {
+  "fill1": 0.046178,
+  "fill2": 0.721391,
+  "mul": 14.510888,
+  "total": 15.278457
+ },
+ "time": {
+  "real": 16.3,
+  "user": 101.7,
+  "sys": 11.8
+ },
+ "returncode": 0
+}

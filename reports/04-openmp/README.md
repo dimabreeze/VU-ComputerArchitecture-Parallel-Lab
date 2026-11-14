@@ -8,7 +8,7 @@ tobulinti; toliau yra tik pavieniai paleidimai, ir jie nieko neprideda.
 |---------|----------------|
 | `openmp-base` | i-j-z, `parallel for` per C eilutes |
 | `openmp-opt`  | i-k-j tvarka (B skaitoma eilutėmis) + `simd`, `schedule(static)` |
-| `openmp-opt2` | blokavimas + pakavimas + 4 × 16 mikrobranduolys, `schedule(dynamic, 1)` ([`docs/openmp_opt2.md`](../../docs/openmp_opt2.md)) |
+| `openmp-opt2` | blokavimas + 4 × 16 mikrobranduolys (be B pakavimo), `schedule(dynamic, 1)` ([`docs/openmp_opt2.md`](../../docs/openmp_opt2.md)) |
 
 ![laiko priklausomybė nuo dydžio](plots/size.png)
 
@@ -70,7 +70,7 @@ skirsto dinamiškai. Jo laikas vienai daugybos ir sudėties operacijai išlieka 
 | 8000  | 6,5×               | 6,6×                |
 | 16000 | 6,3×               | 6,8×                |
 
-- 12 gijų dabar niekada nėra lėtesnės nei 8: dinaminis paskirstymas (schedule(dynamic)) leidžia
+- 12 gijų dabar beveik niekada nėra lėtesnės nei 8 (daugiausia 2 %): dinaminis paskirstymas (schedule(dynamic)) leidžia
   taupiesiems branduoliams paimti mažiau blokų.
 - Mažesnis pagreitėjimas esant mažam n – tai Amdalo dėsnis: nuoseklusis B pildymas sudaro 31 %
   8 gijų laiko, kai n = 2000, ir 19 %, kai n = 4000.

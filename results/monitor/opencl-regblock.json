@@ -1,0 +1,25 @@
+{
+ "scenario": "opencl-regblock",
+ "command": [
+  "build/opencl-opt",
+  "-s",
+  "16000",
+  "--kernel",
+  "src/opencl/opt/regblock.cl"
+ ],
+ "start": 1794690211.2509089,
+ "end": 1794690222.4565918,
+ "capture_at": 7,
+ "phases": {
+  "fill1": 0.27408,
+  "fill2": 0.901662,
+  "mul": 9.632542,
+  "total": 10.808283
+ },
+ "time": {
+  "real": 11.19,
+  "user": 0.98,
+  "sys": 0.3
+ },
+ "returncode": 0
+}

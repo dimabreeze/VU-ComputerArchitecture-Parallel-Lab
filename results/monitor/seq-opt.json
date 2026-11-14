@@ -1,0 +1,23 @@
+{
+ "scenario": "seq-opt",
+ "command": [
+  "build/seq-opt",
+  "-s",
+  "8000"
+ ],
+ "start": 1794691283.3986812,
+ "end": 1794691297.159304,
+ "capture_at": 8,
+ "phases": {
+  "fill1": 0.080203,
+  "fill2": 0.230446,
+  "mul": 13.358336,
+  "total": 13.668986
+ },
+ "time": {
+  "real": 13.75,
+  "user": 13.39,
+  "sys": 0.32
+ },
+ "returncode": 0
+}

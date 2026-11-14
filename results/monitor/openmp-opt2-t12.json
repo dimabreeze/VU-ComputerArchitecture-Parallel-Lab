@@ -1,0 +1,25 @@
+{
+ "scenario": "openmp-opt2-t12",
+ "command": [
+  "build/openmp-opt2",
+  "-s",
+  "16000",
+  "-t",
+  "12"
+ ],
+ "start": 1794690156.9356139,
+ "end": 1794690174.320339,
+ "capture_at": 12,
+ "phases": {
+  "fill1": 0.04735,
+  "fill2": 0.885655,
+  "mul": 16.154923,
+  "total": 17.087928
+ },
+ "time": {
+  "real": 17.37,
+  "user": 169.02,
+  "sys": 1.6
+ },
+ "returncode": 0
+}
