@@ -7,7 +7,7 @@ part: Bendroji dalis
 !!! fact "Svarbiausi faktai"
     - Visi matavimai atlikti **įprastai naudojamame kompiuteryje**: prieš paleidimus kitos programos jau užėmė 7–12 GB iš 16 GB operatyviosios atminties ir apkrovė 1,4–1,7 procesoriaus branduolio (2 skyrius). Rezultatai – pakartotinių paleidimų medianos.
     - Vienos gijos programos **macOS nelaiko viename branduolyje**: gija nuolat perkeliama tarp 8 našiųjų branduolių, nors iš viso užima lygiai vieną (3 skyrius).
-    - Paprasta daugyba (i-j-z) **staiga sulėtėja trigubai, kai n > 3547**: kiekvienas B stulpelio žingsnis atneša naują podėlio eilutę, iš kurios panaudojama tik 3 %, ir 97,7 % atvejų – naują puslapį; kai puslapių daugiau nei telpa TLB (≈ 3072 įrašai, išmatuota), adresų vertimas tampa brangus (4 skyrius).
+    - Paprasta daugyba (i-j-z) **staiga sulėtėja trigubai, kai n > 3547**: kiekvienas stulpelio žingsnis atneša naują podėlio eilutę (panaudojama 3 %) ir beveik visada naują puslapį, kurių TLB (≈ 3072 įrašai, išmatuota) nebesutalpina (4 skyrius).
     - Vien geriau naudojant atmintį **viena gija tampa 125 kartus greitesnė** (n = 4000: 208 s → 1,66 s) – dar prieš bet kokį lygiagretumą. Procesoriaus apkrova abiem atvejais ta pati – vienas branduolys 100 %: **apkrova nerodo, ar branduolys dirba naudingai** (4 skyrius).
 
 ## 1. Užduotis ir ataskaitos sandara
@@ -74,132 +74,69 @@ Visas kodas, matavimų duomenys ir šios ataskaitos šaltiniai – saugykloje (n
 
 ### 2.3 Kaip matuojama
 
-- **Fazės matuojamos atskirai:** A pildymas (`fill1`), B pildymas (`fill2`), daugyba (`mul`) ir bendras laikas (`total`), monotoniniu laikrodžiu (`std::chrono::steady_clock`, OpenMP – `omp_get_wtime`, MPI – `MPI_Wtime`).
-- **Visi variantai generuoja tuos pačius duomenis:** kiekvienas matricos elementas yra deterministinė funkcija nuo sėklos ir indeksų, nepriklausomai nuo gijų ar procesų skaičiaus. Todėl laikus galima tiesiogiai palyginti, o rezultatą – patikrinti (`--verify` palygina su nuosekliu skaičiavimu).
-- **Matavimų serija** (`scripts/bench.sh`) paleidžia kiekvieną variantą su kiekvienu dydžiu ir gijų (procesų) skaičiumi kelis kartus; kiekvienas paleidimas – atskira CSV eilutė. Grafikuose naudojama mediana.
-- **Matricos kvadratinės:** n = k = p, nuo 2000 iki 16000.
+- **Fazės matuojamos atskirai** (A pildymas `fill1`, B pildymas `fill2`, daugyba `mul`, `total`) monotoniniu laikrodžiu; kiekviena konfigūracija – 3–7 paleidimai, naudojama mediana.
+- **Visi variantai generuoja tuos pačius duomenis** (deterministinė elemento funkcija nuo sėklos ir indeksų), todėl laikus galima tiesiogiai lyginti, o rezultatą – patikrinti (`--verify`).
+- Matricos kvadratinės: n = k = p, nuo 2000 iki 16000. Matavimų serija – `scripts/bench.sh`, duomenys – `results/csv/`.
 
 ## 3. Kaip stebime branduolių apkrovą
 
-Užduotis reikalauja parodyti branduolių apkrovą programos vykdymo metu. Naudojame du papildomus būdus.
+Programos `btop` ir `macmon` rodo kiekvieno branduolio ir vaizdo plokštės apkrovą; jų vaizdas užfiksuojamas daugybos viduryje (`make monitor`), procesų sąraše paliekama tik matuojama programa. `btop` numeracija: **C0–C3 – taupieji (E), C4–C11 – našieji (P) branduoliai.** Šilumos žemėlapiuose kas 100 ms įrašyta kiekvieno branduolio (GPU, P7…P0, E3…E0) apkrova ir dažnis, pažymėtos programos fazės, o antraštėje – kiek branduolių programa užėmė vidutiniškai (procesoriaus laikas / trukmė).
 
-**Ekrano vaizdai.** Programa `btop` rodo kiekvieno branduolio apkrovą ir istorijos grafiką, `macmon` – Apple Silicon branduolių grupių, vaizdo plokštės apkrovą ir energijos sąnaudas. Abi veikia terminale; jų vaizdas užfiksuojamas daugybos viduryje ir paverčiamas paveikslu (`make monitor`). Procesų sąraše paliekama tik matuojama programa.
+![seq-base (n = 3000): viena gija nuolat perkeliama tarp našiųjų branduolių, iš viso – lygiai 1,0 branduolio](docs/img/load/seq-base.png)
+![seq-opt (n = 8000): vaizdas toks pat – 1,0 branduolio, nors skaičiuoja 125 kartus greičiau](docs/img/load/seq-opt.png)
 
-`btop` branduolius numeruoja C0–C11: **C0–C3 yra taupieji (E), C4–C11 – našieji (P) branduoliai.**
+Du dalykai, svarbūs skaitant tolesnių dalių vaizdus:
 
-**Šilumos žemėlapiai.** Kas 100 ms įrašoma kiekvieno branduolio ir vaizdo plokštės apkrova bei dažnis (`macmon`, be administratoriaus teisių). Žemėlapyje eilutės – branduoliai (GPU, P7…P0, E3…E0), ašis X – laikas nuo programos paleidimo, šviesesnė spalva – didesnė apkrova. Viršuje pažymėtos programos fazės, apačioje – dažniai ir atminties naudojimas. Antraštėje nurodyta, kiek branduolių programa užėmė vidutiniškai: jos procesoriaus laikas (user + sys), padalytas iš trukmės.
-
-![seq-base (n = 3000) vykdymo metu: btop rodo vieną procesą, kuris naudoja ≈ 100 % (vieną branduolį), bet apkrova pasiskirsčiusi per kelis P branduolius](docs/img/screens/seq-base-btop.png)
-
-![seq-base šilumos žemėlapis: viena gija kas kelias sekundes perkeliama į kitą P branduolį; iš viso programa užima lygiai 1,0 branduolio](docs/img/load/seq-base.png){: .wide }
-
-**Ką tai rodo.** Vienos gijos programa nebūna „prikalta“ prie vieno branduolio: macOS planuoklė ją nuolat perkelia tarp 8 našiųjų branduolių (P0–P7). Todėl ekrano vaizde vienos gijos programa gali atrodyti kaip kelių branduolių dalinė apkrova, nors iš tikrųjų užima lygiai vieną branduolį. Tolesnėse dalyse tai svarbu skaitant 1 gijos vaizdus.
+- **vienos gijos programa nėra „prikalta“ prie branduolio** – macOS ją perkelia tarp P0–P7, todėl vaizde ji atrodo kaip kelių branduolių dalinė apkrova;
+- **apkrova nerodo naudingo darbo** – `seq-base` ir `seq-opt` abu užima lygiai vieną branduolį, bet `seq-base` didžiąją laiko dalį laukia duomenų iš atminties, o laukimas apkrovoje matomas kaip „darbas“.
 
 ## 4. Bendras atskaitos taškas: nuosekli daugyba ir atmintis
 
-Visų trijų dalių pradžia – ta pati nuosekli programa. Ji parodo, kad greitį pirmiausia lemia ne skaičiavimas, o tai, iš kurio atminties lygio ateina duomenys.
+Visų dalių pradžia – ta pati nuosekli programa. Ji parodo, kad greitį pirmiausia lemia ne skaičiavimas, o tai, iš kurio atminties lygio ateina duomenys. Išsamiau: `docs/tlb_cliff.md`, `docs/memory.md`, `docs/seq_opt.md`.
 
 ### 4.1 seq-base ir staigus sulėtėjimas ties n ≈ 3547
 
-`seq-base` daugina vadovėline tvarka i-j-z: kiekvienam C elementui A eilutė dauginama iš B **stulpelio**. Matricos atmintyje saugomos eilutėmis, todėl gretimi stulpelio elementai nutolę 4·p baitų (n = 4000 – 16 000 B, beveik visas 16 KB puslapis). Kiekvienas žingsnis patenka į naują podėlio eilutę ir beveik visada į naują puslapį.
+`seq-base` daugina tvarka i-j-z: A eilutė dauginama iš B **stulpelio**. Matricos saugomos eilutėmis, todėl gretimi stulpelio elementai nutolę 16 000 B (n = 4000). Kiekvienas žingsnis **visada** atneša naują 128 B podėlio eilutę, iš kurios panaudojama **tik 3 %**, ir **97,7 % atvejų** patenka į naują 16 KB puslapį.
 
-![Matricos atmintyje (n = 4000): kiekviena – ištisinis 64 MB blokas; B eilutė (16 000 B) trumpesnė už puslapį (16 384 B), todėl eilučių ir puslapių ribos „slenka“; viena podėlio eilutė – 32 skaičiai](docs/img/slides/atmintis-isdestymas.png)
+![Matricos atmintyje (n = 4000): B eilutė (16 000 B) trumpesnė už puslapį (16 384 B), todėl eilučių ir puslapių ribos „slenka“](docs/img/slides/atmintis-isdestymas.png)
 
-Ką kerta kiekvienas stulpelio žingsnis, galima suskaičiuoti tiksliai:
+![Vienas B stulpelio žingsnis kerta podėlio eilutės ribą visada, puslapio ribą – 97,7 % atvejų](docs/img/slides/ribu-kirtimas.png)
 
-- **podėlio eilutės ribą – 100 % žingsnių:** šuolis (16 000 B) daug ilgesnis už eilutę (128 B), todėl kiekvienas žingsnis atneša naują eilutę;
-- **puslapio ribą – 97,7 % žingsnių:** tame pačiame puslapyje lieka tik tie žingsniai, kurių poslinkis puslapyje mažesnis nei 384 B (384 / 16 384 = 2,3 %);
-- **iš atneštos eilutės panaudojama tik 3 %** (4 B iš 128 B). Likę 31 skaičius reikalingi kitiems stulpeliams j+1…j+31 – jei eilutė dar bus podėlyje. Visas stulpelis – 4000 eilučių × 128 B ≈ 500 KB: netelpa L1 (128 KB), bet telpa L2 (16 MB), todėl iki n ≈ 3500 eilutės randamos L2.
-
-![Vienas B stulpelio žingsnis kerta podėlio eilutės ribą visada, puslapio ribą – 97,7 % atvejų; kai puslapių daugiau nei telpa TLB, n > 3547](docs/img/slides/ribu-kirtimas.png)
-
-Kol visi vieno stulpelio puslapiai telpa TLB (adresų vertimo buferyje), vertimai randami greitai. Stulpelis paliečia ≈ 4·n² / 16384 puslapių; kai jų daugiau nei ≈ 3072 TLB įrašai, kiekvienas kreipinys reikalauja puslapių lentelės peržiūros:
+Kol visi stulpelio puslapiai telpa TLB (adresų vertimo buferyje), vertimai randami greitai. Stulpelis paliečia ≈ 4·n² / 16384 puslapių, o L2 TLB talpa – ≈ 3072 įrašai:
 
     4 · n² / 16384 > 3072   ⇒   n > 3547
 
-![seq-base laikas pagal operacijų skaičių n·k·p: kol vienos operacijos kaina pastovi, taškai guli tiesėje; ties n ≈ 3547 tiesė lūžta (seq-base, openmp-base ir mpi-base, 1 gija)](reports/ataskaita/img/tlb/plots/size-linear.png)
+![Pastebėta: seq-base, openmp-base ir mpi-base (1 gija) laikas pagal operacijų skaičių – ties n ≈ 3547 tiesė lūžta, viena operacija pabrangsta nuo 1,1 iki 3,2 ns](reports/ataskaita/img/tlb/plots/size-linear.png)
+![Išmatuota: kai paliečiama daugiau nei 3072 puslapių, vieno skaitymo laikas šokteli nuo 7,7 iki 16,3 ns – tai L2 TLB riba](docs/img/memory/tlb.png)
 
-| n | 2000 | 3000 | 3500 | 3550 | 3600 | 3700 | 4000 |
-|---|------|------|------|------|------|------|------|
-| ns vienai daugybos ir sudėties operacijai | 0,58 | 0,89 | 1,10 | 1,26 | 1,81 | 3,18 | 3,24 |
-
-Visi trys baziniai variantai (`seq-base`, `openmp-base` ir `mpi-base` su 1 gija) guli ant tos pačios kreivės: tai atminties, ne lygiagretumo savybė.
+Visi trys baziniai variantai guli ant tos pačios kreivės: tai atminties, ne lygiagretumo savybė.
 
 ### 4.2 Išmatuota atminties hierarchija
 
-Kad šie paaiškinimai remtųsi ne prielaidomis, atminties savybes išmatavome atskira programa (`make memory`): rodyklių sekimu atsitiktine tvarka matuojama vieno skaitymo delsa, kai duomenų kiekis didėja, ir kai paliečiama vis daugiau puslapių.
-
-![Vieno skaitymo kelias: adresas verčiamas TLB, tada ieškoma L1, L2, SLC ir operatyviojoje atmintyje; po kiekvienu lygiu – išmatuota jo kaina](docs/img/slides/skaitymo-kelias.png)
-
-![Vieno atsitiktinio skaitymo delsa pagal duomenų kiekį: kiekvienas atminties lygis – atskiras laiptelis](docs/img/memory/lat.png)
-
-| lygis | dydis | delsa |
-|-------|-------|-------|
+| lygis | dydis | atsitiktinio skaitymo delsa |
+|-------|-------|-----------------------------|
 | L1 podėlis | 128 KB | **0,88 ns** (≈ 3 taktai) |
 | L2 podėlis | 16 MB | **5,6 ns** (≈ 20 taktų) |
-| operatyvioji atmintis | 16 GB | **≈ 117 ns** (≈ 400 taktų) – ≈ 130 kartų lėčiau už L1 |
+| operatyvioji atmintis | 16 GB | **≈ 117 ns** (≈ 400 taktų, ≈ 130 kartų lėčiau už L1) |
+| TLB praleidimas | > 3072 puslapiai | **+8,6 ns** |
 
-![TLB: po vieną eilutę kiekviename 16 KB puslapyje; šuolis tarp 3072 ir 3328 puslapių – L2 TLB riba](docs/img/memory/tlb.png)
-
-Kai paliečiama daugiau nei **3072 puslapių** (48 MB), vieno skaitymo laikas šokteli nuo 7,7 iki **16,3 ns**. Taip tiesiogiai patvirtinta TLB talpa, kuria remiasi n ≈ 3547 riba.
-
-Nuoseklaus skaitymo pralaidumas: **58 GB/s viena gija** ir ne daugiau kaip **≈ 122 GB/s** visomis gijomis (Apple nurodo 200 GB/s visam lustui kartu su vaizdo plokšte).
+Nuoseklaus skaitymo pralaidumas – **58 GB/s viena gija** ir ne daugiau kaip **≈ 122 GB/s** visomis gijomis. Matuota atskira programa `memlat` (`make memory`).
 
 ### 4.3 seq-opt: tas pats skaičiavimas, kitas darbas su atmintimi
 
-`seq-opt` atlieka lygiai tas pačias operacijas, bet:
+`seq-opt` atlieka tas pačias operacijas, bet **skaido matricas blokais** (B blokas 1 MB lieka L2), **pakuoja** B bloką į ištisinį buferį (skaitoma tik nuosekliai, TLB problema išnyksta) ir **kaupia rezultatą registruose** (4 × 16 C fragmentas). Šis skaičiavimo branduolys (`include/gemm.hpp`) naudojamas ir MPI optimizuotame variante; OpenMP optimizuotas variantas remiasi ta pačia idėja, bet turi savo realizaciją.
 
-- **skaido matricas blokais**, kad B blokas (512 × 512 = 1 MB) liktų L2 podėlyje ir būtų panaudotas visoms A eilutėms;
-- **pakuoja** B bloką į ištisinį buferį – mikrobranduolys jį skaito tik nuosekliai, TLB problema išnyksta;
-- **skaičiuoja registruose:** 4 × 16 C fragmentas laikomas 16 vektorinių registrų, per žingsnį 20 skaitymų duoda 64 operacijas.
+![seq-base ir seq-opt laikas pagal matricos dydį (abi ašys logaritminės): seq-opt tiesė lygiagreti n³ – vienos operacijos kaina pastovi nuo n = 2000 iki 16000](reports/ataskaita/img/seqopt/plots/size.png){: .narrow }
 
-![seq-base ir seq-opt laikas pagal matricos dydį (abi ašys logaritminės): seq-opt tiesė lygiagreti n³ – vienos operacijos kaina pastovi nuo n = 2000 iki 16000](reports/ataskaita/img/seqopt/plots/size.png)
+**Kodėl 125 kartus (n = 4000: 208 s → 1,66 s).** Blokavimas keičia ne operacijų skaičių, o tai, kiek baitų atnešama iš atminties. Patogu tai išreikšti **aritmetiniu intensyvumu** – operacijomis vienam atneštam baitui. Kompiuterio balansas ≈ 0,7 op/B (≈ 40·10⁹ op/s vienam branduoliui ir 58 GB/s): mažiau – algoritmas laukia atminties, daugiau – riboja skaičiavimas.
 
-| n | seq-base | seq-opt | kiek kartų greičiau |
-|---|----------|---------|---------------------|
-| 2000 | 4,65 s | 0,224 s | 21× |
-| 4000 | 208 s | 1,66 s | **125×** |
-| 16000 | – | 107 s | |
-
-**Apkrova nerodo efektyvumo.** Procesoriaus apkrovos vaizde `seq-opt` atrodo lygiai taip pat kaip `seq-base`: vienas procesas, ≈ 100 % vieno branduolio, gija perkeliama tarp našiųjų branduolių. Abu užima lygiai 1,0 branduolio, tačiau `seq-opt` per tą patį laiką atlieka 125 kartus daugiau operacijų. `seq-base` branduolys didžiąją laiko dalį laukia duomenų iš atminties, o ši laukimo trukmė apkrovos rodiklyje matoma kaip „darbas“.
-
-![seq-opt (n = 8000) vykdymo metu: tas pats vaizdas kaip seq-base – vienas procesas, ≈ 100 % vieno branduolio](docs/img/screens/seq-opt-btop.png)
-
-![seq-opt šilumos žemėlapis: viena gija, 1,0 branduolio – kaip ir seq-base, nors skaičiuoja 125 kartus greičiau](docs/img/load/seq-opt.png){: .wide }
-
-**Kodėl 125 kartus.** Blokavimas keičia ne operacijų skaičių, o tai, kiek kartų kiekvienas skaičius atnešamas iš operatyviosios atminties. Ciklų tvarka j0 → k0 → pakuoti B → visos A eilutės: kiekvienas B blokas iš atminties perskaitomas **vieną kartą** ir panaudojamas visoms 4000 A eilučių. Kai n = 4000, iš atminties perskaitoma ≈ 1,6 GB (B – kartą, A – 8 kartus, C – 8 kartus skaitant ir rašant). Palyginimui: tvarka i-k-j kiekvienai A eilutei perskaito visą B – iki 4·n³ = 256 GB. Tai **≈ 160 kartų mažiau** baitų (įvertis pagal ciklų struktūrą).
-
-![Blokavimas ir pakavimas: B blokas (1 MB) supakuojamas į ištisinį buferį ir lieka L2; operatyviosios atminties srautas sumažėja nuo 256 GB iki ≈ 1,6 GB](docs/img/slides/blokavimas-srautas.png)
-
-Tai patogu išreikšti **aritmetiniu intensyvumu** – kiek daugybos ir sudėties operacijų tenka vienam iš atminties atneštam baitui. Vienas branduolys atlieka ≈ 40·10⁹ operacijų per sekundę, o atmintis vienai gijai tiekia 58 GB/s, todėl kompiuterio **balansas ≈ 0,7 operacijos baitui**. Algoritmas su mažesniu intensyvumu laukia atminties, su didesniu – riboja skaičiavimas:
-
-| variantas | operacijų | baitų iš atminties | intensyvumas | riboja |
-|-----------|-----------|--------------------|--------------|--------|
-| i-k-j (`openmp-opt` su 1 gija) | 64·10⁹ | ≈ 256 GB | **0,25 op/B** | atmintis (skaito 54 GB/s – 93 % pralaidumo) |
-| blokai (`seq-opt`) | 64·10⁹ | ≈ 1,6 GB | **≈ 40 op/B** | skaičiavimas |
-
-![Operacijų vienam atminties baitui (log. skalė): i-k-j žemiau kompiuterio balanso – laukia atminties; blokinis variantas daug aukščiau – jo greitis nuo atminties nebepriklauso](docs/img/slides/intensyvumas.png)
-
-`seq-opt` vienai operacijai skiria pastovias 0,025 ns (≈ 40 mlrd. operacijų per sekundę vienu branduoliu). Šis skaičiavimo branduolys (`include/gemm.hpp`) vėliau naudojamas MPI optimizuotame variante, o OpenMP optimizuotas variantas remiasi ta pačia idėja (blokai podėlyje, 4 × 16 mikrobranduolys registruose), bet turi savo realizaciją. Todėl optimizuotų variantų palyginimas su baziniais rodo ir atminties, ir lygiagretumo efektą.
+| tvarka | baitų iš atminties (n = 4000, įvertis) | intensyvumas | riboja |
+|--------|-----------------------------------------|--------------|--------|
+| i-k-j (kiekvienai A eilutei – visa B) | ≈ 256 GB | **0,25 op/B** | atmintis (viena gija skaito 54 GB/s – 93 % pralaidumo) |
+| blokai (`seq-opt`) | ≈ 1,6 GB (≈ 160 kartų mažiau) | **≈ 40 op/B** | skaičiavimas (0,025 ns operacijai) |
 
 ## 5. Analizės įrankiai
 
-Tyrimo dalyse lygiagretumo efektyvumas vertinamas keliais dėsniais. Čia pateikiami jų apibrėžimai.
+**Pagreitėjimas** S(N) = T(1) / T(N) – lyginamas to paties varianto laikas su 1 ir N gijų (procesų), ne su `seq-base`, kad atminties efektas nebūtų painiojamas su lygiagretumu.
 
-**Pagreitėjimas** S(N) = T(1) / T(N) – to paties varianto laikas su 1 gija (procesu), padalytas iš laiko su N. Lyginama su tuo pačiu variantu, o ne su `seq-base`, kitaip atminties efektas būtų painiojamas su lygiagretumu.
-
-**Amdalo dėsnis.** Jei dalis f programos vykdoma tik nuosekliai, tai
-
-    S(N) = 1 / (f + (1 − f) / N),     S(∞) = 1 / f
-
-Mūsų uždavinyje nuosekli dalis žinoma iš anksto – B pildymas, todėl f ne derinama prie kreivės, o **išmatuojama**: f = fill2 / total vienos gijos paleidime. B pildymas auga kaip n², o daugyba – kaip n³, todėl f mažėja didėjant matricoms (**Gustafsono dėsnis**).
-
-**Karpo–Flato metrika** e = (1/S − 1/N) / (1 − 1/N) – nuoseklioji dalis, kuri paaiškintų išmatuotą pagreitėjimą. Jei e ≈ f, viską paaiškina Amdalo dėsnis; jei e > f, yra kitų nuostolių (atmintis, sinchronizacija, dažnis).
-
-**Nevienodi branduoliai.** Amdalo dėsnis laiko branduolius vienodais, bet M2 Pro taupusis branduolys šiame uždavinyje atlieka tik r ≈ 0,15 našiojo darbo (išmatuota: 1,60 s našiajame ir 10,85 s taupiajame branduolyje, n = 4000). N gijų verta
-
-    N_eff = min(N, 8) + r · max(N − 8, 0)
-
-našiųjų branduolių – 12 gijų atitinka tik ≈ 8,6.
-
-**Kas toliau.** 1 dalyje šie įrankiai pritaikomi OpenMP variantams, 2 dalyje – MPI, 3 dalyje – vaizdo plokštei.
+**Amdalo dėsnis.** Jei dalis f vykdoma tik nuosekliai, S(N) = 1 / (f + (1 − f) / N), o riba S(∞) = 1 / f. Mūsų uždavinyje nuoseklioji dalis – B pildymas, todėl f **išmatuojama**: f = fill2 / total vienos gijos paleidime. Ji mažėja didėjant matricoms, nes pildymas auga kaip n², o daugyba – kaip n³ (**Gustafsono dėsnis**). Jei pagreitėjimas mažesnis, nei leidžia dėsnis, likusius nuostolius įvertina **Karpo–Flato metrika** – iš pagreitėjimo apskaičiuota nuoseklioji dalis e. Taupusis branduolys šiame uždavinyje atlieka tik ≈ 0,15 našiojo darbo (išmatuota), todėl 12 gijų verta tik ≈ 8,6 našiojo branduolio. Išsamiau: `docs/amdahl.md`.

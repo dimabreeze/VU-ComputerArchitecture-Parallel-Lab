@@ -7,7 +7,8 @@ Input:  reports/ataskaita/src/<part>.md, Markdown with a metadata header:
           subtitle: ...     optional
           part: ...         e.g. "Bendroji dalis" / "1 dalis" (title page, page footer)
         Images are referenced from the project root: ![caption](docs/img/load/seq-base.png);
-        they become numbered figures ("1 pav. caption").
+        they become numbered figures ("1 pav. caption"), always one under another (side-by-side
+        pairs made the text in plots and screenshots unreadable).
         Call-out boxes (Markdown "admonition" syntax):
           !!! fact "Svarbiausi faktai"        key findings (accent colour)
           !!! conditions "Matavimo sąlygos"   measurement conditions (amber)
@@ -63,6 +64,7 @@ tr:nth-child(even) td { background: #f7f9fb; }
 figure { margin: 3mm 0 5mm; text-align: center; break-inside: avoid; }
 figure img { max-width: 100%; max-height: 120mm; }
 figure.wide img { max-height: 160mm; }
+figure.narrow img { max-width: 72%; }
 figcaption { font-size: 8.5pt; color: var(--muted); margin-top: 1.5mm; text-align: center; }
 figcaption b { color: var(--ink); }
 .admonition { border-left: 4px solid var(--accent); background: #eef4f9; padding: 3mm 4mm 1mm; margin: 3mm 0 5mm;
@@ -94,9 +96,9 @@ def render(md_text):
 
 
 def figures(body, counter):
-    """<p><img alt=caption src=path></p> -> numbered <figure>; paths relative to the project root"""
-    def repl(m):
-        attrs = m.group(1)
+    """<p><img alt=caption src=path></p> -> numbered <figure>; paths relative to the project root.
+    Several images in one paragraph -> separate figures, one under another."""
+    def one(attrs):
         alt = html.unescape(re.search(r'alt="([^"]*)"', attrs).group(1))
         src = re.search(r'src="([^"]*)"', attrs).group(1)
         cls = re.search(r'class="([^"]*)"', attrs)
@@ -108,7 +110,8 @@ def figures(body, counter):
         counter[0] += 1
         return (f'<figure class="{cls.group(1) if cls else ""}"><img src="{src}" alt="{html.escape(alt)}">'
                 f'<figcaption><b>{counter[0]} pav.</b> {html.escape(alt)}</figcaption></figure>')
-    return re.sub(r"<p><img ([^>]*)/?></p>", repl, body)
+    return re.sub(r"<p>((?:<img [^>]*?/?>\s*)+)</p>",
+                  lambda m: "".join(one(a) for a in re.findall(r"<img ([^>]*?)/?>", m.group(1))), body)
 
 
 def titlepage(meta):
