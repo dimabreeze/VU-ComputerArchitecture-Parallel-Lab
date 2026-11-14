@@ -73,7 +73,8 @@ papildytas vienu stulpeliu (`[TM][TK+1]`).
 
 Parametrai yra makrokomandos: `WM`, `WN` (blokas vienam darbo elementui), `LX`, `LY` (darbo grupė),
 `TK` (bloko gylis). Jie suderinti esant n = 4000 (`mul`, geriausias iš 3) neredaguojant
-failo, per aplinkos kintamąjį `CL_BUILD_OPTS`:
+failo, per aplinkos kintamąjį `CL_BUILD_OPTS`. Tai vienkartinis derinimo eksperimentas (rankiniai
+paleidimai, ne `make bench` medianos), todėl jo skaičiai gali šiek tiek skirtis nuo 4 skyriaus:
 
 | konfigūracija (WM × WN, darbo grupė, TK) | n = 4000 | n = 8000 |
 |------------------------------------------|----------|----------|
@@ -94,10 +95,10 @@ CL_BUILD_OPTS="-DWM=8 -DWN=4" build/opencl-opt -s 4000 --kernel src/opencl/opt/r
 
 - **Buferiai be kopijavimo (zero-copy).** Apple Silicon turi bendrąją CPU ir GPU atmintį. Buferiai kuriami su
   `CL_MEM_USE_HOST_PTR` ant pagrindinės programos matricų, o `clEnqueueMapBuffer` /
-  `Unmap` padaro GPU rezultatus matomus pagrindinei programai jų nekopijuojant. Su
-  regblock, kai n = 4000, visa `mul` fazė trunka 0,191 s, iš jų pats kernelis
-  – 0,187 s. Buferių paruošimas ir sinchronizacija trunka apie 3 ms; `base.cpp` kopijuoja
-  2 × 64 MB.
+  `Unmap` padaro GPU rezultatus matomus pagrindinei programai jų nekopijuojant. Vieno
+  profiliuoto regblock paleidimo (n = 4000) `mul` fazė truko 0,191 s, iš jų pats kernelis
+  – 0,187 s: buferių paruošimas ir sinchronizacija trunka apie 3 ms (`make bench` mediana –
+  0,143 s, 4 skyrius). `base.cpp` kopijuoja 2 × 64 MB.
 - **Save aprašantys kerneliai.** Kiekviename kernelio faile yra kernelis `geometry`, kuris
   grąžina `{LX, LY, TM, TN}`: darbo grupės dydį ir vienai grupei tenkantį C bloką. Viena
   pagrindinė programa aptarnauja visus kernelius, o globalūs dydžiai suapvalinami aukštyn iki sveikų blokų.
@@ -130,7 +131,7 @@ vienas kernelis veikė beveik 3 minutes tame pačiame GPU, kuris valdo ekraną. 
 nepavyko patvirtinti iš sistemos žurnalo.
 
 `opencl-opt` išvengia ilgų komandų (juostos) ir aptinka tokius gedimus (būsena ir
-atrankinis patikrinimas). Kai n = 14000, regblock atlieka 110 paleidimų per 5,8 s ir praeina
+atrankinis patikrinimas). Kai n = 14000, regblock atlieka 110 paleidimų per 5,77 s (mediana) ir praeina
 patikrinimą.
 
 ### Apple OpenCL profiliavimo keistenybė
@@ -143,34 +144,35 @@ išeidavo lygiai 41,7 karto per mažas. `event_seconds()` konvertuoja reikšmę 
 
 ## 4. Rezultatai
 
-`mul` fazė (GPU darbas + sinchronizacija), sekundės:
+`mul` fazė (GPU darbas + sinchronizacija), sekundės – `make bench` medianos (`results/csv/`):
 
 | n     | naive (base) | coalesced | tiled  | regblock | regblock, palyginti su naive |
 |-------|--------------|-----------|--------|----------|------------------------------|
-| 2000  | 0,502        | 0,070     | 0,048  | 0,020    | 25×                          |
-| 4000  | 3,90         | 0,547     | 0,376  | 0,143–0,147 | 27×                       |
-| 8000  | 31,2         | 4,40      | 3,01   | 1,18     | 26×                          |
-| 14000 | 168          |           |        | 5,82     | 29×                          |
+| 2000  | 0,483        | 0,070     | 0,048  | 0,020    | 24×                          |
+| 4000  | 3,87         | 0,545     | 0,375  | 0,143    | 27×                          |
+| 8000  | 31,0         | 4,39      | 3,01   | 1,19     | 26×                          |
+| 14000 | 168          | 23,7      | 16,1   | 5,77     | 29×                          |
+| 16000 | –            | 35,4      | 24,0   | 9,93     |                              |
 
-Kiekvienas žingsnis duoda savo naudą: sujungti kreipiniai (coalescing) duoda 7×, lokalioji atmintis – 1,4×,
-o blokavimas registruose – 2,6×.
+Kiekvienas žingsnis duoda savo naudą (n = 4000): sujungti kreipiniai (coalescing) – 7,1×, lokalioji
+atmintis – 1,45×, blokavimas registruose – 2,6×.
 
-regblock našumas yra apie 64·10⁹ / 0,143 s ≈ **450·10⁹** daugybos ir sudėties operacijų per
-sekundę, palyginti su 16·10⁹ naive atveju.
+regblock našumas – nuo 392·10⁹ (n = 2000) iki 475·10⁹ (n = 14000) daugybos ir sudėties operacijų
+per sekundę; kai n = 4000, 64·10⁹ / 0,143 s ≈ **446·10⁹**. Palyginimui naive – ≈ 16·10⁹.
 
-Palyginimas su CPU, kai n = 4000:
+Palyginimas su CPU, kai n = 4000 (`mul`, medianos):
 
 | variantas                    | mul      |
 |------------------------------|----------|
-| seq-opt (1 branduolys)       | 1,56 s   |
-| openmp-opt2 (8 gijos)        | 0,22 s   |
-| mpi-opt (8 procesai)         | 0,25 s   |
+| seq-opt (1 branduolys)       | 1,58 s   |
+| openmp-opt2 (8 gijos)        | 0,218 s  |
+| mpi-opt (8 procesai)         | 0,242 s  |
 | **opencl-opt regblock (GPU)** | **0,143 s** |
 
 ## 5. Likę apribojimai ir idėjos (neįgyvendintos)
 
-- **fill2.** Nuoseklus matrix2 generavimas CPU (0,057 s, kai n = 4000) dabar sudaro
-  ketvirtadalį viso laiko. Jis nuoseklus pagal užduoties apibrėžimą.
+- **fill2.** Nuoseklus matrix2 generavimas CPU (0,058 s, kai n = 4000) dabar sudaro
+  27 % viso laiko (0,220 s). Jis nuoseklus pagal užduoties apibrėžimą.
 - **int32 GPU.** Sveikųjų skaičių aritmetika GPU yra lėtesnė nei FP32. Čia
   sandaugos ir sumos būtų tikslios `float` tipe, kol |sum| < 2²⁴, o tai galioja,
   kai x = 10 ir k ≤ 1,6 milijono, todėl kernelis su float FMA tikriausiai būtų greitesnis.
