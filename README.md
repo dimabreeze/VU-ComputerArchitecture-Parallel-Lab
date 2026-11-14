@@ -4,7 +4,10 @@ Užduotis: [docs/task.md](docs/task.md).
 Kurso medžiaga: [docs/Reference/](docs/Reference/).  
 Analizė:
 * [docs/tlb_cliff.md](docs/tlb_cliff.md) (staigus sulėtėjimas ties TLB riba), 
-* [docs/amdahl.md](docs/amdahl.md) (Amdalo dėsnis, E branduoliai). 
+* [docs/amdahl.md](docs/amdahl.md) (Amdalo dėsnis, E branduoliai),
+* [docs/memory.md](docs/memory.md) (atminties delsos, TLB ir pralaidumo matavimai).
+
+Kompiuteris ir programinė įranga: [docs/machine.md](docs/machine.md).  
 
 Etapų ataskaitos: [reports/README.md](reports/README.md); 
 Pristatymai: [reports/pptx/](reports/pptx/).
@@ -31,18 +34,20 @@ src/openmp/opt.cpp     OpenMP, optimizuotas (i-k-j tvarka, simd)
 src/openmp/opt2.cpp    OpenMP, blokavimas podėlyje ir registruose, dinaminis paskirstymas (docs/openmp_opt2.md)
 src/mpi/base.cpp       MPI, ištaisytas kurso šablonas (docs/Reference/mpi_sample.md): pagal užduotį (matrix1 pildoma lygiagrečiai, Bcast, Send/Recv) (docs/mpi_opt.md)
 src/mpi/opt.cpp        MPI, greitas branduolys (gemm.hpp) + eilučių blokai + Gatherv, pasirinktinis Ibcast konvejeris (docs/mpi_opt.md)
-src/opencl/base.cpp    OpenCL pagrindinė programa; branduoliai src/opencl/base/*.cl (naive.cl)
-src/opencl/opt.cpp     OpenCL pagrindinė programa: be kopijavimo, su patikrinimais, eilučių juostomis; branduoliai src/opencl/opt/*.cl (docs/opencl_opt.md)
-src/opencl/common.cl   generatorius + pildymo branduolys, pridedamas prie kiekvieno opt branduolio
+src/opencl/base.cpp    OpenCL pagrindinė programa; kerneliai src/opencl/base/*.cl (naive.cl)
+src/opencl/opt.cpp     OpenCL pagrindinė programa: be kopijavimo, su patikrinimais, eilučių juostomis; kerneliai src/opencl/opt/*.cl (docs/opencl_opt.md)
+src/opencl/common.cl   generatorius + pildymo kernelis, pridedamas prie kiekvieno opt kernelio
+src/tools/memlat.cpp   atminties delsos, TLB ir pralaidumo matavimai (docs/memory.md)
 scripts/bench.sh       matavimų serija -> po vieną CSV kiekvienai konfigūracijai, eilutės pridedamos prie results/csv/<config>.csv
 scripts/plot.py        grafikai iš CSV (filtrai, etapų pavadinimai, žymės: žr. failo pradžią)
 scripts/reports.sh     etapų ataskaitos -> reports/<stage>/plots/ (kiekvieno etapo README.md juos paaiškina)
+scripts/memory.sh      atminties matavimai -> results/memory/*.csv, scripts/plot_memory.py -> docs/img/memory/
 ```
 
 Kiekvienas `src/<tech>/<variant>.cpp` automatiškai tampa tikslu (target) `<tech>-<variant>` ir vykdomuoju failu `build/<tech>-<variant>`.
-Naujas OpenCL branduolys (kernel), skirtas `opencl-base`, – tai naujas failas `src/opencl/base/<name>.cl` su branduoliais
+Naujas OpenCL kernelis, skirtas `opencl-base`, – tai naujas failas `src/opencl/base/<name>.cl` su kerneliais
 `fill_matrix1` ir `matmul`; `opencl-opt` atveju – `src/opencl/opt/<name>.cl` su `geometry`
-ir `matmul` (sąsaja (contract) aprašyta `src/opencl/common.cl`). `make bench` paleidžia kiekvieną kiekvienos programos branduolį.
+ir `matmul` (sąsaja (contract) aprašyta `src/opencl/common.cl`). `make bench` paleidžia kiekvieną kiekvienos programos kernelį.
 
 ## Naudojimas
 
@@ -58,6 +63,7 @@ make run-opencl-base ARGS="-s 2000 --kernel src/opencl/base/naive.cl"
 make bench                 # visa matavimų serija (aplinkos kintamieji: SIZES, THREADS, REPEATS, VARIANTS)
 make plot                  # grafikai iš results/csv/*.csv -> results/plots/ (arba IN=katalogas|failai OUT=katalogas)
 make reports               # visos etapų ataskaitos -> reports/<stage>/ (arba STAGES="02 05")
+make memory                # atminties delsa, TLB, pralaidumas -> docs/img/memory/ (≈ 3 min.)
 make compdb                # compile_commands.json IDE aplinkai
 ```
 

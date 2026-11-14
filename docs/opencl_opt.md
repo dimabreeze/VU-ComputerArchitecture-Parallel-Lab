@@ -1,13 +1,13 @@
 # OpenCL opt: nuo 16 iki ~450 milijardų operacijų per sekundę
 
 Pagrindinė programa (host): [`src/opencl/opt.cpp`](../src/opencl/opt.cpp), tikslas `opencl-opt`.
-Branduoliai (kernels), po vieną kiekvienam optimizavimo žingsniui: [`src/opencl/opt/`](../src/opencl/opt/) —
+Kerneliai, po vieną kiekvienam optimizavimo žingsniui: [`src/opencl/opt/`](../src/opencl/opt/) —
 `coalesced.cl`, `tiled.cl`, `regblock.cl`. Bendras kodas (generatorius, `fill_matrix1`,
 makrokomanda `MAD`): [`src/opencl/common.cl`](../src/opencl/common.cl), kurį pagrindinė programa
-prijungia branduolio failo pradžioje.
+prijungia kernelio failo pradžioje.
 
 Pradinis variantas nepakeistas: `opencl-base` su `src/opencl/base/naive.cl`.
-`make bench` paleidžia kiekvieną programos branduolį: `src/opencl/<X>/*.cl` programai
+`make bench` paleidžia kiekvieną programos kernelį: `src/opencl/<X>/*.cl` programai
 `build/opencl-<X>`.
 
 Užduoties semantika tokia pati kaip base:
@@ -16,7 +16,7 @@ Užduoties semantika tokia pati kaip base:
 - matrix2 pildoma nuosekliai CPU;
 - daugyba vykdoma lygiagrečiai GPU.
 
-Visi branduoliai sėkmingai praeina `--verify` su nesulygiuotais dydžiais (`37x51x29`, `1x1x1`, `100x3x77`,
+Visi kerneliai sėkmingai praeina `--verify` su nesulygiuotais dydžiais (`37x51x29`, `1x1x1`, `100x3x77`,
 `129x257x130`, `1001x999x1003`), įskaitant atvejus, kai skaičiavimas padalytas į daug paleidimų.
 
 Kompiuteris: Apple M2 Pro, GPU su 19 branduolių (Metal 3), Apple OpenCL 1.2. Apple
@@ -29,7 +29,7 @@ OpenCL yra pasenęs (deprecated), bet vis dar veikia.
 CPU (`openmp-opt2`, 8 gijos) ir maža dalis to, ką gali GPU
 (apie 6,8·10¹² FP32 operacijų per sekundę).
 
-## 2. Branduoliai
+## 2. Kerneliai
 
 ### 2.1 coalesced.cl: tinkama NDRange dimensija
 
@@ -95,38 +95,38 @@ CL_BUILD_OPTS="-DWM=8 -DWN=4" build/opencl-opt -s 4000 --kernel src/opencl/opt/r
 - **Buferiai be kopijavimo (zero-copy).** Apple Silicon turi bendrąją CPU ir GPU atmintį. Buferiai kuriami su
   `CL_MEM_USE_HOST_PTR` ant pagrindinės programos matricų, o `clEnqueueMapBuffer` /
   `Unmap` padaro GPU rezultatus matomus pagrindinei programai jų nekopijuojant. Su
-  regblock, kai n = 4000, visa `mul` fazė trunka 0,191 s, iš jų pats branduolys
+  regblock, kai n = 4000, visa `mul` fazė trunka 0,191 s, iš jų pats kernelis
   – 0,187 s. Buferių paruošimas ir sinchronizacija trunka apie 3 ms; `base.cpp` kopijuoja
   2 × 64 MB.
-- **Save aprašantys branduoliai.** Kiekviename branduolio faile yra branduolys `geometry`, kuris
+- **Save aprašantys kerneliai.** Kiekviename kernelio faile yra kernelis `geometry`, kuris
   grąžina `{LX, LY, TM, TN}`: darbo grupės dydį ir vienai grupei tenkantį C bloką. Viena
-  pagrindinė programa aptarnauja visus branduolius, o globalūs dydžiai suapvalinami aukštyn iki sveikų blokų.
+  pagrindinė programa aptarnauja visus kernelius, o globalūs dydžiai suapvalinami aukštyn iki sveikų blokų.
 - **Paleidimas eilučių juostomis.** Daugyba padalijama į paleidimus, kurių kiekvienas atlieka ne daugiau kaip
   2³⁴ ≈ 1,7·10¹⁰ daugybos ir sudėties operacijų, sveikais eilučių blokais (`BAND_OPS`; n = 4000:
   4 paleidimai, n = 14000: 110). Kiekvienas paleidimas yra trumpas.
 - **Kiekvienas programos paleidimas tikrinamas.**
-  - Baigus patikrinama kiekvieno branduolio įvykio būsena. Įrenginyje nepavykusios komandos
+  - Baigus patikrinama kiekvieno kernelio įvykio būsena. Įrenginyje nepavykusios komandos
     būsena yra neigiama.
   - `spot_check()` iš `common.cpp` CPU perskaičiuoja 256 atsitiktinius matrix3 elementus ir
     kampus. Tam reikia 256·k operacijų, t. y. sekundės dalį net
     kai n = 14000.
   - Nepavykęs paleidimas išveda klaidą ir baigiasi kodu 3, todėl `bench.sh` praneša
     `FAILED`, o eilutė nepatenka į CSV. Išbandyta su tyčia sugadintu
-    branduoliu: `SPOT CHECK FAILED: matrix3[0][0] = 0, expected -115`.
-- **Profiliavimas.** Ataskaitoje rodomas grynasis branduolio laikas (visų paleidimų suma). CSV
+    kerneliu: `SPOT CHECK FAILED: matrix3[0][0] = 0, expected -115`.
+- **Profiliavimas.** Ataskaitoje rodomas grynasis kernelio laikas (visų paleidimų suma). CSV
   jo neįtraukia.
 
 ### Kodėl svarbūs patikrinimai ir juostos
 
 Su `opencl-base`, kai n = 14000 (3 pakartojimai), 1-asis ir 3-iasis paleidimai truko 168 s, o 2-asis paleidimas
 „truko“ 0,22 s. Tai būtų 2,7·10¹² / 0,22 ≈ 12·10¹² operacijų per sekundę, daugiau
-nei GPU FP32 didžiausias našumas, todėl branduolys negalėjo atlikti šio darbo. Greičiausiai jis
-buvo nutrauktas arba atmestas. Tuo metu `base.cpp` netikrino branduolio būsenos,
+nei GPU FP32 didžiausias našumas, todėl kernelis negalėjo atlikti šio darbo. Greičiausiai jis
+buvo nutrauktas arba atmestas. Tuo metu `base.cpp` netikrino kernelio būsenos,
 o blokuojantis rezultato buferio skaitymas vis tiek grąžina sėkmę, todėl neteisingas rezultatas
 buvo pateiktas su netikru laiku. Dabar `base.cpp` turi tuos pačius patikrinimus kaip `opt.cpp`:
-įvykio būseną ir atrankinį patikrinimą. Jis vis dar vykdo vieną ilgą branduolį be juostų, todėl toks
+įvykio būseną ir atrankinį patikrinimą. Jis vis dar vykdo vieną ilgą kernelį be juostų, todėl toks
 paleidimas vis dar gali būti nutrauktas, tačiau jis pažymimas kaip `FAILED` ir neišsaugomas. Tikėtina priežastis – macOS apsauga nuo ilgų GPU komandų:
-vienas branduolys veikė beveik 3 minutes tame pačiame GPU, kuris valdo ekraną. To
+vienas kernelis veikė beveik 3 minutes tame pačiame GPU, kuris valdo ekraną. To
 nepavyko patvirtinti iš sistemos žurnalo.
 
 `opencl-opt` išvengia ilgų komandų (juostos) ir aptinka tokius gedimus (būsena ir
@@ -137,7 +137,7 @@ patikrinimą.
 
 Pagal standartą `CL_PROFILING_COMMAND_START/END` turi būti nanosekundėmis.
 Apple realizacija vietoj jų grąžina `mach_absolute_time` taktus
-(Apple Silicon 1 taktas = 125/3 ≈ 41,67 ns). Prieš pataisymą branduolio laikas
+(Apple Silicon 1 taktas = 125/3 ≈ 41,67 ns). Prieš pataisymą kernelio laikas
 išeidavo lygiai 41,7 karto per mažas. `event_seconds()` konvertuoja reikšmę naudodama
 `mach_timebase_info`.
 
@@ -173,7 +173,7 @@ Palyginimas su CPU, kai n = 4000:
   ketvirtadalį viso laiko. Jis nuoseklus pagal užduoties apibrėžimą.
 - **int32 GPU.** Sveikųjų skaičių aritmetika GPU yra lėtesnė nei FP32. Čia
   sandaugos ir sumos būtų tikslios `float` tipe, kol |sum| < 2²⁴, o tai galioja,
-  kai x = 10 ir k ≤ 1,6 milijono, todėl branduolys su float FMA tikriausiai būtų greitesnis.
+  kai x = 10 ir k ≤ 1,6 milijono, todėl kernelis su float FMA tikriausiai būtų greitesnis.
   Tai neatlikta, nes pakeistų užduoties duomenų tipą.
 - Vektoriniai įkėlimai (`int4`), dvigubas lokaliųjų blokų buferizavimas ir tolesnis derinimas kiekvienam
   dydžiui.

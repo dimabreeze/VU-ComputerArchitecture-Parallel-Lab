@@ -10,6 +10,8 @@
 #   make run-opencl-base ARGS="-s 2000 --kernel src/opencl/base/naive.cl"
 #   make run-opencl-opt ARGS="-s 2000 --kernel src/opencl/opt/tiled.cl"   (default: regblock.cl)
 #   make bench                    benchmark sweep -> rows appended to results/csv/*.csv
+#   make memory                   memory microbenchmarks (build/tools/memlat) -> results/memory/*.csv
+#                                 and plots docs/img/memory/*.png (docs/memory.md)
 #   make compdb                   compile_commands.json for the IDE
 #
 # NOTE: the project path contains spaces, so only relative paths are used here.
@@ -40,7 +42,7 @@ SRCS    := $(foreach t,$(TECHS),$(wildcard src/$(t)/*.cpp))
 # src/openmp/base.cpp -> openmp-base
 NAMES   := $(foreach s,$(SRCS),$(word 2,$(subst /, ,$(s)))-$(basename $(notdir $(s))))
 
-.PHONY: all clean bench plot reports compdb list $(TECHS) $(NAMES)
+.PHONY: all clean bench plot reports memory compdb list $(TECHS) $(NAMES)
 
 all: $(NAMES)
 
@@ -81,6 +83,15 @@ run-%: build/%
 
 bench: all
 	scripts/bench.sh
+
+# ---- memory microbenchmarks (not part of the bench sweep) ----
+build/tools/memlat: src/tools/memlat.cpp
+	@mkdir -p build/tools
+	$(CXX) -std=c++17 -O2 -Wall -Wextra $< -o $@
+
+# run on an otherwise idle machine: takes about 3 minutes
+memory: build/tools/memlat .venv
+	scripts/memory.sh
 
 # ---- IDE support: compile_commands.json for clangd ----
 MPI_CFLAGS := $(shell $(MPICXX) --showme:compile 2>/dev/null)

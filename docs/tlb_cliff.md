@@ -59,7 +59,9 @@ lookaside buffer).
 
 Apple M1/M2 našiųjų (P) branduolių L2 TLB, remiantis trečiųjų šalių matavimais, turi
 apie **3072 įrašus** (Apple šio skaičiaus neskelbia). Esant 16 KB puslapiams, tai
-apima 48 MB atminties.
+apima 48 MB atminties. Šiame kompiuteryje tai patvirtinta tiesiogiai: kai paliečiama
+daugiau nei 3072 puslapių, skaitymo delsa šokteli nuo 7,7 iki 16,3 ns
+([memory.md](memory.md), 3 skyrius).
 
 Staigus sulėtėjimas prasideda ten, kur puslapių skaičius vienam stulpeliui viršija
 TLB talpą:

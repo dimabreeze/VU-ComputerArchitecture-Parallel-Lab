@@ -20,7 +20,7 @@ SIZES=${SIZES:-"250 500 1000 2000 4000"}
 THREADS=${THREADS:-"1 2 4 8 12"}
 REPEATS=${REPEATS:-3}
 SEED=${SEED:-42}
-VARIANTS=${VARIANTS:-$(cd build && ls)}
+VARIANTS=${VARIANTS:-$(cd build && ls -p | grep -v /)}   # programs only, not build/tools/
 
 HEADER="tech,variant,n,k,p,workers,fill1,fill2,mul,total,repeat"
 OUT_DIR=results/csv

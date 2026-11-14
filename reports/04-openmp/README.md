@@ -53,6 +53,10 @@ iš RAM, ir gijos prisotina atminties magistralę; trys atminties operacijos vie
 daugybos ir sudėties operacijai; `schedule(static)` lėtiesiems taupiesiems branduoliams skiria tiek pat eilučių, kiek
 greitiesiems, todėl nuo n = 6000 12 gijų yra lėtesnės nei 8.
 
+Pralaidumo matavimas tai patvirtina ([`docs/memory.md`](../../docs/memory.md), 4–5 skyriai):
+viena `openmp-opt` gija skaito B 54 GB/s greičiu, t. y. 93 % išmatuoto vienos gijos
+pralaidumo (58 GB/s), o visų gijų pralaidumas neviršija ≈ 122 GB/s.
+
 ![openmp-opt2 pagreitėjimas](plots/openmp-opt2-speedup.png)
 
 `openmp-opt2` laiko B blokus (tiles) podėlyje, kaupia sumas registruose ir eilučių blokus

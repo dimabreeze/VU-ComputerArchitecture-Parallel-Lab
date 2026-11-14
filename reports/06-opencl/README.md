@@ -1,6 +1,6 @@
 # 6 etapas · OpenCL: naive → coalesced → tiled → regblock
 
-Duomenys: `opencl-base` (branduolys (kernel) `naive`) ir `opencl-opt` (branduoliai `coalesced`,
+Duomenys: `opencl-base` (kernelis `naive`) ir `opencl-opt` (kerneliai `coalesced`,
 `tiled`, `regblock`), GPU su 19 skaičiavimo vienetų (compute units).
 
 Išsamiau: [`docs/opencl_opt.md`](../../docs/opencl_opt.md).
@@ -26,8 +26,8 @@ Kiekvienas žingsnis pašalina vieną siaurąją vietą (bottleneck), o laikas v
    apie 450·10⁹ daugybos ir sudėties operacijų per sekundę.
 
 Pagrindinė programa (host) taip pat buvo sustiprinta: buferiai be kopijavimo (zero-copy), paleidimai eilučių juostomis, kiekvieno
-branduolio būsenos patikra ir atrankinė rezultato patikra. Vienas `naive` paleidimas su n = 14000 kartą
-„baigėsi“ per 0,22 s – greičiau, nei leidžia didžiausias GPU našumas: branduolys buvo nutrauktas, o
+kernelio būsenos patikra ir atrankinė rezultato patikra. Vienas `naive` paleidimas su n = 14000 kartą
+„baigėsi“ per 0,22 s – greičiau, nei leidžia didžiausias GPU našumas: kernelis buvo nutrauktas, o
 rezultatas taip ir nepatikrintas. Tokie paleidimai dabar žymimi `FAILED` ir neišsaugomi.
 
 Kas lieka: CPU atliekamas matricos B pildymas dabar sudaro 27 % viso laiko, kai n = 4000. → [7 etapas](../07-amdahl/README.md)

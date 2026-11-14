@@ -20,4 +20,6 @@ etapų apibrėžimai (duomenys, filtrai, pavadinimai) yra
 Pristatymai (lietuvių k.): [`pptx/`](pptx/).
 
 Kompiuteris: Apple M2 Pro, 8 našieji (P) + 4 taupieji (E) branduoliai, 19 branduolių GPU, 16 KB puslapiai,
-bendroji CPU ir GPU atmintis. Laikai – pakartotinių paleidimų medianos.
+bendroji CPU ir GPU atmintis; visi parametrai ir programinės įrangos versijos – [`docs/machine.md`](../docs/machine.md),
+atminties delsos, TLB ir pralaidumo matavimai – [`docs/memory.md`](../docs/memory.md).
+Laikai – pakartotinių paleidimų medianos.

@@ -26,6 +26,10 @@ Perėjimas laipsniškas (3550 → 3700) dėl kitų podėlio /
 TLB hierarchijos lygių. Išsamiau ir jį patvirtinantis eksperimentas (n = 200, keičiant k = p):
 [`docs/tlb_cliff.md`](../../docs/tlb_cliff.md).
 
+L2 TLB dydį (≈ 3072 įrašai) patvirtina tiesioginis matavimas: kai paliečiama daugiau nei
+3072 puslapių, vieno skaitymo laikas šokteli nuo 7,7 iki 16,3 ns
+([`docs/memory.md`](../../docs/memory.md), 3 skyrius).
+
 **Pasekmės.**
 
 - Pagreitėjimai `seq-base` atžvilgiu, kai n viršija ≈ 3500, yra išpūsti dėl atminties efekto.

@@ -1,6 +1,6 @@
 # 1 etapas · Bazinės realizacijos
 
-Duomenys: `seq-base`, `openmp-base`, `mpi-base`, `opencl-base` (branduolys (kernel) `naive`),
+Duomenys: `seq-base`, `openmp-base`, `mpi-base`, `opencl-base` (kernelis `naive`),
 n = k = p = 2000…4000.
 
 Visi baziniai variantai daugina vadovėline ciklų tvarka i-j-z: kiekvienam C elementui

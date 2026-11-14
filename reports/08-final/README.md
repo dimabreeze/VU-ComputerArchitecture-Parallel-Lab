@@ -1,7 +1,7 @@
 # 8 etapas · Galutinis geriausių variantų palyginimas
 
 Duomenys: `seq-base` (atskaitos taškas), `seq-opt`, `openmp-opt2`, `mpi-opt`,
-`opencl-opt` (branduolys (kernel) `regblock`), geriausias gijų (procesų) skaičius, iki n = 16000.
+`opencl-opt` (kernelis `regblock`), geriausias gijų (procesų) skaičius, iki n = 16000.
 
 ![laiko priklausomybė nuo dydžio](plots/size.png)
 
@@ -24,7 +24,7 @@ Išvados:
    Esant dideliam n, OpenMP šiek tiek greitesnis: bendrai naudojama atmintis, nėra B kopijų ir C
    surinkimo, o dinaminis paskirstymas susidoroja su taupiaisiais branduoliais.
 3. **GPU yra greičiausias** (kai n = 16000, apie 1,6× greitesnis nei 8 CPU branduoliai), bet
-   tik po trijų optimizavimo žingsnių: naivus branduolys (kernel) buvo 14× lėtesnis už
+   tik po trijų optimizavimo žingsnių: naivus kernelis buvo 14× lėtesnis už
    `openmp-opt2`.
 4. **Nuoseklusis B pildymas** išlieka visų greitųjų variantų riba (7 etapas).
 
